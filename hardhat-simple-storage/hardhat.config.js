@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("@nomicfoundation/hardhat-verify");
 require("dotenv").config();
+require("hardhat-gas-reporter");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 
@@ -12,6 +13,10 @@ module.exports = {
   solidity: "0.8.28",
   defaultNetwork: "hardhat",
   networks: {
+    localhost: {
+      url: "http:127.0.0.1:8545",
+      chainId: 31337,
+    },
     sepolia: {
       url: SEPOLIA_URL,
       chainId: 11155111,
@@ -22,6 +27,12 @@ module.exports = {
     apiKey: ETHERSCAN_KEY,
   },
   sourcify: {
-    enabled: true
+    enabled: true,
+  },
+  gasReporter: {
+    enabled: true,
+    outputFile: "gas-report.txt",
+    noColors: true,
+    currency: "USD",
   },
 };

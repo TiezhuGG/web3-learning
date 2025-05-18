@@ -59,6 +59,7 @@ npx hardhat ignition deploy ./ignition/modules/SimpleStorage.js --network sepoli
 The --verify flag is optional, but it tells Hardhat Ignition to verify the contracts after a successful deployment.
 
 If you have an existing deployment and want to verify it, you can also run the verify task directly by passing the deployment ID:
+
 ```shell
 npx hardhat verify --network sepolia chain-11155111
 ```
@@ -82,6 +83,30 @@ ETHERSCAN_KEY=your_etherscan_key
 ```
 
 then run the following command to verify the contract:
+
 ```shell
 npx hardhat verify --network sepolia your_contract_address
+```
+
+add a test file in test/SimpleStorage.js to test the contract.
+
+```shell
+npx hardhat test
+```
+
+add gas report to the test file.
+
+```shell
+npm install --save-dev hardhat-gas-reporter
+```
+
+```javascript
+require("hardhat-gas-reporter");
+
+gasReporter: {
+  enabled: true,
+  outputFile: "gas-report.txt",
+  noColors: true,
+  currency: "USD",
+}
 ```

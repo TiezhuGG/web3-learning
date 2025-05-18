@@ -1,24 +1,27 @@
-const { expect } = require("chai");
+const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("Store a favoriteNumber and get it", function () {
-  it("test store a favoriteNumber", async function () {
-    const [owner] = await ethers.getSigners();
-    console.log(`Owner address: ${owner.address}`);
+  let SimpleStorageFactory, simpleStorage;
+  beforeEach(async function () {
+    SimpleStorageFactory = await ethers.getContractFactory("SimpleStorage");
+    simpleStorage = await SimpleStorageFactory.deploy();
+  });
 
-    const contract = await ethers.deployContract("SimpleStorage");
-    await contract.waitForDeployment();
-    console.log(`Contract deployed at ${contract.target}`);
+  it("Should start with a favorite number of 0", async function () {
+    const currentValue = await simpleStorage.retrieve();
+    const expectedValue = "0";
+    assert.equal(currentValue, expectedValue);
+  });
 
-    const currentValue = await contract.retrieve();
-    console.log(`Current value is ${currentValue}`);
-    expect(currentValue).to.equal(0);
-
+  it("Should update when we call store", async function () {
     // Update the current value
-    const transactionResponse = await contract.store("11");
+    const expectedValue = "11";
+    const transactionResponse = await simpleStorage.store(expectedValue);
     await transactionResponse.wait(1);
-    const updatedValue = await contract.retrieve();
-    expect(updatedValue).to.equal("11");
+
+    const updatedValue = await simpleStorage.retrieve();
+    expect(updatedValue).to.equal(expectedValue); // like assert.equal, choose any one
     console.log(`Updated value is ${updatedValue}`);
   });
 });
