@@ -6,6 +6,7 @@ require("dotenv").config();
 
 const SEPOLIA_URL = `${process.env.ALCHEMY_SEPOLIA_RPC_URL}/${process.env.ALCHEMY_KEY}`;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY;
 
 module.exports = {
   solidity: "0.8.28",
@@ -18,8 +19,9 @@ module.exports = {
     },
   },
   etherscan: {
-    apiKey: {
-      sepolia: process.env.ETHERSCAN_KEY,
-    },
+    apiKey: ETHERSCAN_KEY,
+  },
+  sourcify: {
+    enabled: true
   },
 };
