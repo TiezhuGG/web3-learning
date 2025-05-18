@@ -24,4 +24,15 @@ describe("Store a favoriteNumber and get it", function () {
     expect(updatedValue).to.equal(expectedValue); // like assert.equal, choose any one
     console.log(`Updated value is ${updatedValue}`);
   });
+
+  it("test addPerson function", async function() {
+    const expectedName = "FFF";
+    const expectedFavoriteNumber = "9";
+    const transactionResponse = await simpleStorage.addPerson(expectedName, expectedFavoriteNumber);
+    await transactionResponse.wait(1);
+
+    const person = await simpleStorage.people(0);
+    expect(person.name).to.equal(expectedName);
+    expect(person.favoriteNumber).to.equal(expectedFavoriteNumber);
+  })
 });
