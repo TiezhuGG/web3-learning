@@ -14,23 +14,37 @@ const { developmentChains } = require("../../helper-hardhat-config");
         // deployer = accounts[0]
         deployer = (await getNamedAccounts()).deployer;
         await deployments.fixture(["all"]);
-        const fundMeContract = await deployments.get("FundMe");
-        fundMe = await ethers.getContractAt("FundMe", fundMeContract.address);
+        const fundMeDeployment = await deployments.get("FundMe");
+        console.log("FundMe部署地址:", fundMeDeployment.address); // 添加调试信息
+        fundMe = await ethers.getContractAt("FundMe", fundMeDeployment.address);
+
+        // 在mock聚合器获取部分添加验证
         const mockAggregatorDeployment = await deployments.get(
           "MockV3Aggregator"
         );
-        assert.isDefined(mockAggregatorDeployment.address, "Mock aggregator address should exist");
+        console.log("Mock聚合器地址:", mockAggregatorDeployment.address);
+        assert(mockAggregatorDeployment.address, "Mock聚合器地址未定义");
+
+        assert.isDefined(
+          mockAggregatorDeployment.address,
+          "Mock aggregator address should exist"
+        );
         mockV3Aggregator = await ethers.getContractAt(
           "MockV3Aggregator",
-          mockAggregatorDeployment.address
+          mockAggregatorDeployment.target
+        );
+
+        // 修改后
+        mockV3Aggregator = await ethers.getContractAt(
+          "MockV3Aggregator",
+          mockAggregatorDeployment.address // 使用正确的address属性
         );
       });
 
       describe("constructor", function () {
         it("sets the aggregator addresses correctly", async () => {
           const response = await fundMe.getPriceFeed();
-          console.log(`实际地址: ${response}，期望地址: ${mockV3Aggregator.address}`);
-          assert.equal(response, mockV3Aggregator.address);
+          assert.equal(response, mockV3Aggregator.target); // 改用target属性获取地址
         });
       });
 
@@ -61,32 +75,33 @@ const { developmentChains } = require("../../helper-hardhat-config");
         });
         it("withdraws ETH from a single funder", async () => {
           // Arrange
-          const startingFundMeBalance = await fundMe.provider.getBalance(
-            fundMe.address
+          // 修改所有余额获取方式
+          const startingFundMeBalance = await ethers.provider.getBalance(
+            fundMe.target
           );
-          const startingDeployerBalance = await fundMe.provider.getBalance(
+          const startingDeployerBalance = await ethers.provider.getBalance(
             deployer
           );
 
           // Act
           const transactionResponse = await fundMe.withdraw();
           const transactionReceipt = await transactionResponse.wait();
-          const { gasUsed, effectiveGasPrice } = transactionReceipt;
-          const gasCost = gasUsed.mul(effectiveGasPrice);
+          const gasCost =
+            transactionReceipt.gasUsed * transactionReceipt.gasPrice;
 
-          const endingFundMeBalance = await fundMe.provider.getBalance(
-            fundMe.address
+          const endingFundMeBalance = await ethers.provider.getBalance(
+            fundMe.target
           );
-          const endingDeployerBalance = await fundMe.provider.getBalance(
+          const endingDeployerBalance = await ethers.provider.getBalance(
             deployer
           );
 
           // Assert
           // Maybe clean up to understand the testing
-          assert.equal(endingFundMeBalance, 0);
+          assert.equal(endingFundMeBalance, 0n);
           assert.equal(
-            startingFundMeBalance.add(startingDeployerBalance).toString(),
-            endingDeployerBalance.add(gasCost).toString()
+            startingFundMeBalance + startingDeployerBalance - gasCost,
+            endingDeployerBalance
           );
         });
         // this test is overloaded. Ideally we'd split it into multiple tests
@@ -98,9 +113,10 @@ const { developmentChains } = require("../../helper-hardhat-config");
             const fundMeConnectedContract = await fundMe.connect(accounts[i]);
             await fundMeConnectedContract.fund({ value: sendValue });
           }
-          const startingFundMeBalance = await fundMe.provider.getBalance(
-            fundMe.address
+          const startingFundMeBalance = await ethers.provider.getBalance(
+            fundMe.target
           );
+
           const startingDeployerBalance = await fundMe.provider.getBalance(
             deployer
           );
@@ -137,11 +153,9 @@ const { developmentChains } = require("../../helper-hardhat-config");
           }
         });
         it("Only allows the owner to withdraw", async function () {
-          const accounts = await ethers.getSigners();
-          const fundMeConnectedContract = await fundMe.connect(accounts[1]);
-          await expect(fundMeConnectedContract.withdraw()).to.be.revertedWith(
-            "FundMe__NotOwner"
-          );
+          await expect(
+            fundMeConnectedContract.withdraw()
+          ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner"); // 使用自定义错误匹配
         });
       });
     });

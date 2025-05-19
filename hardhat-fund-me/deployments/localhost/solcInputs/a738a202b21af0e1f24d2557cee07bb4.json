@@ -22,6 +22,9 @@
     "contracts/PriceConverter.sol": {
       "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.7;\r\n\r\nimport \"@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol\";\r\n\r\nlibrary PriceConverter {\r\n    function getPrice(\r\n        AggregatorV3Interface priceFeed\r\n    ) internal view returns (uint256) {\r\n        (, int256 answer, , , ) = priceFeed.latestRoundData();\r\n        // ETH/USD rate in 18 digit\r\n        return uint256(answer * 10000000000);\r\n    }\r\n\r\n    // 1000000000\r\n    // call it get fiatConversionRate, since it assumes something about decimals\r\n    // It wouldn't work for every aggregator\r\n    function getConversionRate(\r\n        uint256 ethAmount,\r\n        AggregatorV3Interface priceFeed\r\n    ) internal view returns (uint256) {\r\n        uint256 ethPrice = getPrice(priceFeed);\r\n        uint256 ethAmountInUsd = (ethPrice * ethAmount) / 1000000000000000000;\r\n        // the actual ETH/USD conversation rate, after adjusting the extra 0s.\r\n        return ethAmountInUsd;\r\n    }\r\n}\r\n"
     },
+    "contracts/SimpleStorage.sol": {
+      "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.18;\r\n\r\ncontract SimpleStorage {\r\n    uint256 public storedData;\r\n\r\n    function set(uint256 x) public {\r\n        storedData = x;\r\n    }\r\n\r\n    function get() public view returns (uint256) {\r\n        return storedData;\r\n    }\r\n}\r\n"
+    },
     "contracts/test/MockV3Aggregator.sol": {
       "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.0;\r\n\r\nimport \"@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol\";\r\n"
     }
