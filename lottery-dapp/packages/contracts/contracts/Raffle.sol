@@ -28,16 +28,18 @@ contract Raffle {
     // 选择赢家
     function pinkRandomWinner() public {
         require(s_players.length > 0, "No players entered!");
+
         uint256 randomNumber = getRandomNumber();
         uint256 winnerIndex = randomNumber % s_players.length;
         address payable recentWinner = s_players[winnerIndex];
-
         s_recentWinner = recentWinner;
+
+        // 发送奖金给赢家
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         if (!success) {
             revert Raffle_TransferFailed();
         }
-        // 重置彩票
+        // 重置参与者列表，准备下一轮
         s_players = new address payable[](0);
 
         emit WinnerPicked(recentWinner);
@@ -66,5 +68,9 @@ contract Raffle {
     // 获取最近的赢家
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
     }
 }
