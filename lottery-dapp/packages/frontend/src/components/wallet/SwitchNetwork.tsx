@@ -68,7 +68,7 @@ export default function SwitchNetwork() {
                       {currentChain?.id === chain.id ? "已连接" : ""}
                     </span>
                     {currentChain?.id === chain.id && (
-                      <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                     )}
                   </p>
                 </div>

@@ -7,12 +7,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAccount, useBalance, useDisconnect } from "wagmi";
 import { useState } from "react";
-import { copyToClipboard, formatAddress } from "@/lib/utils";
+import { copyToClipboard, formatAddress, getFirstWord } from "@/lib/utils";
 import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import SwitchNetwork from "./SwitchNetwork";
+import { networks } from "./networks";
 
 export default function ConnectedWallet() {
-  const { address } = useAccount();
+  const { address, chain: currentChain } = useAccount();
   const { data: balanceData } = useBalance({
     address,
   });
@@ -20,6 +21,9 @@ export default function ConnectedWallet() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  const chain = (networks.find((network) => network.id === currentChain?.id) ??
+    currentChain) as (typeof networks)[number];
 
   const handleCopyAddress = () => {
     if (address) {
@@ -53,13 +57,13 @@ export default function ConnectedWallet() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogTitle></DialogTitle>
           <div className="flex flex-col justify-center items-center">
-            <img
-              src={""}
-              alt="'"
-              height={80}
-              width={80}
-              className="rounded-full"
-            />
+            {chain.icon ? (
+              <div className="rounded-full">{chain.icon}</div>
+            ) : (
+              <div className="w-[24px] h-[24px] rounded-full text-center leading-[24px] bg-gray-100 text-black dark:text-white">
+                {getFirstWord(chain.name)}
+              </div>
+            )}
             <div className="text-center mt-3">
               <p className="text-lg font-bold">{formatAddress(address!)}</p>
               <p className="text-gray-400">
