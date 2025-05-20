@@ -9,20 +9,21 @@ import { useAccount, useBalance, useDisconnect } from "wagmi";
 import { useState } from "react";
 import { copyToClipboard, formatAddress } from "@/lib/utils";
 import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
+import SwitchNetwork from "./SwitchNetwork";
 
 export default function ConnectedWallet() {
   const { address } = useAccount();
-  const { data: balanceData } = useBalance({ address });
+  const { data: balanceData } = useBalance({
+    address,
+  });
   const { disconnect } = useDisconnect();
-  console.log("balanceData", balanceData);
 
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleCopyAddress = async () => {
+  const handleCopyAddress = () => {
     if (address) {
-      const result = await copyToClipboard(address);
-      console.log("result", result);
+      const result = copyToClipboard(address);
       if (result) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
@@ -31,7 +32,8 @@ export default function ConnectedWallet() {
   };
 
   return (
-    <div>
+    <div className="flex gap-3">
+      <SwitchNetwork />
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button

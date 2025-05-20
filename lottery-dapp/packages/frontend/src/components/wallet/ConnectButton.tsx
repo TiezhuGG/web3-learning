@@ -1,6 +1,6 @@
 "use client";
 
-import { useConnect } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
