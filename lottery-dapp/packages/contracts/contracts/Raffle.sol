@@ -26,7 +26,7 @@ contract Raffle {
     }
 
     // 选择赢家
-    function pinkRandomWinner() public {
+    function pickRandomWinner() public {
         require(s_players.length > 0, "No players entered!");
 
         uint256 randomNumber = getRandomNumber();

@@ -12,16 +12,16 @@ async function main() {
   const Raffle = await ethers.getContractFactory("Raffle");
   // 部署合约
   const deployedRaffle = await Raffle.deploy(ENTRANCE_FEE);
-  console.log(`Raffle contract deployed to: ${deployedRaffle.target}`);
-
   await deployedRaffle.waitForDeployment();
   console.log("Raffle contract deployed successfully!", deployedRaffle.target);
 
   // 验证合约(当部署到sepolia测试网的时候需要验证合约)
-  // if (network.config.chainId === 11155111 && process.env.ETHERSCAN_KEY) {
-  //   await contractAddress.deploymentTransaction().wait(5);
-  //   await verifyContract(deployedRaffle.target, [ENTRANCE_FEE]);
-  // }
+  if (network.config.chainId === 11155111 && process.env.ETHERSCAN_KEY) {
+    await contractAddress.deploymentTransaction().wait(5);
+    await verifyContract(deployedRaffle.target, [ENTRANCE_FEE]);
+  }
+
+  deployedRaffle
 }
 
 async function verifyContract(contractAddress, args) {

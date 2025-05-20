@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("dotenv").config();
 require("@nomicfoundation/hardhat-verify");
+require("hardhat-gas-reporter");
 
 const SEPOLIA_URL = process.env.ALCHEMY_SEPOLIA_RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -28,5 +29,11 @@ module.exports = {
   },
   sourcify: {
     enabled: true,
-  }
+  },
+  gasReporter: {
+    enabled: false,
+    outputFile: "gas-report.txt",
+    noColors: true,
+    currency: "USD",
+  },
 };
