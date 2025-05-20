@@ -10,23 +10,9 @@ describe("Raffle", function () {
 
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
-    console.log(
-      "players: ",
-      player1.address,
-      player2.address,
-      "owner: ",
-      owner.address,
-      "entranceFee: ",
-      entranceFee,
-      "network: ",
-      network.config.chainId,
-      "chainId: ",
-      network.config.chainId === 11155111 ? "sepolia" : "hardhat"
-    );
-
     const Raffle = await ethers.getContractFactory("Raffle");
     raffle = await Raffle.deploy(entranceFee);
-    await raffle.waitForDeployment(); // 等待部署完成
+    await raffle.waitForDeployment();
   });
 
   describe("enterRaffle", function () {
