@@ -14,10 +14,9 @@ export const config = createConfig({
     [hardhat.id]: http(HARDHAT_RPC_URL),
   },
   connectors: [
-    injected(),
     walletConnect({
       projectId: WALLETCONNECT_PROJECT_ID,
-      showQrModal: true,
+      showQrModal: false,
     }),
     coinbaseWallet({
       appName: "My Dapp",
