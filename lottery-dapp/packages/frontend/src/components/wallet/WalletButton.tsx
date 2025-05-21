@@ -32,10 +32,11 @@ export default function ConnectedWallet() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
-            className="shadow-md font-bold py-2 rounded-xl
-            transform hover:scale-105 transition-transform duration-300"
+            className="h-[46px] shadow-md font-bold py-2 rounded-xl
+            transform hover:scale-105 transition-transform duration-300
+            "
           >
-            <p>
+            <p className="max-md:hidden">
               {balanceData?.formatted} {balanceData?.symbol}
             </p>
             <p className="flex items-center py-1 ml-2 rounded-md">
@@ -55,9 +56,9 @@ export default function ConnectedWallet() {
                 className="w-18 h-18 rounded-full"
               />
             ) : (
-              <div className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black dark:text-white">
+              <p className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black dark:text-white">
                 {getFirstWord(chain?.name!)}
-              </div>
+              </p>
             )}
             <div className="text-center mt-3">
               <p className="text-lg font-bold">{formatAddress(address!)}</p>

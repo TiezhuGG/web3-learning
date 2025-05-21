@@ -25,7 +25,7 @@ export default function ConnectButton() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button disabled={isConnecting} className="rounded-xl">
+        <Button disabled={isConnecting} className="h-[46px] rounded-xl">
           <Wallet className="w-4 h-4" />
           {isConnecting ? "Connecting..." : "Connect Wallet"}
         </Button>
