@@ -11,7 +11,7 @@ import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import SwitchNetwork from "./SwitchNetwork";
 import { useWallet } from "@/hooks/useWallet";
 
-export default function ConnectedWallet() {
+export default function WalletButton() {
   const { address, chain, balanceData, disconnect } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
