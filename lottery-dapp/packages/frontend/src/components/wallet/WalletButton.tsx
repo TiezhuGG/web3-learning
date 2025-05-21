@@ -9,7 +9,7 @@ import { useState } from "react";
 import { copyToClipboard, formatAddress, getFirstWord } from "./utils";
 import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import SwitchNetwork from "./SwitchNetwork";
-import { useWallet } from "../hooks/useWallet";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function ConnectedWallet() {
   const { address, chain, balanceData, disconnect } = useWallet();

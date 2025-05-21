@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Wallet } from "lucide-react";
 import { useState } from "react";
-import { useWallet } from "../hooks/useWallet";
+import { useWallet } from "@/hooks/useWallet";
 
 const walletIcons: Record<string, string> = {
   WalletConnect: "/assets/wallet/WalletConnect.png",

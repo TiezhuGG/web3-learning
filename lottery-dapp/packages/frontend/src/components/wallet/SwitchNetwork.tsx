@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { getFirstWord } from "./utils";
-import { useWallet } from "../hooks/useWallet";
+import { useWallet } from "@/hooks/useWallet";
 import { ChevronDown } from "lucide-react";
 
 export default function SwitchNetwork() {
