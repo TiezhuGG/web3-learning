@@ -4,7 +4,7 @@ import {
   useWatchContractEvent,
   useWriteContract,
 } from "wagmi";
-import { Address } from "viem";
+import { Address, parseEther } from "viem";
 
 export const useRaffleContract = () => {
   // 读取彩票入场费
@@ -12,6 +12,9 @@ export const useRaffleContract = () => {
     address: CONTRACT_ADDRESS,
     abi: ABI,
     functionName: "getEntranceFee",
+    query: {
+      staleTime: Infinity, // 费用通常不会变，可以设置较长的缓存时间
+    },
   });
 
   // 读取彩票参与者数量
@@ -51,8 +54,6 @@ export const useRaffleContract = () => {
     },
   });
 
-  console.log("recentWinner", recentWinner);
-
   const { writeContract: enterRaffle, isPending: isEntering } =
     useWriteContract();
   const { writeContract: pickWinner, isPending: isPicking } =
@@ -63,12 +64,13 @@ export const useRaffleContract = () => {
     playerCount: playerCount as number | undefined,
     recentWinner: recentWinner as Address | undefined,
 
-    enterRaffle: () =>
+    enterRaffle: (ethAmount: string) =>
       enterRaffle({
         address: CONTRACT_ADDRESS,
         abi: ABI,
         functionName: "enterRaffle",
-        value: entranceFee as bigint,
+        // value: entranceFee as bigint, // 默认使用入场费
+        value: parseEther(ethAmount), // 允许用户指定入场费
       }),
 
     pickWinner: () =>

@@ -4,9 +4,14 @@ import { useRaffleContract } from "@/hooks/useRaffleContract";
 import { useWallet } from "@/hooks/useWallet";
 import { formatEther } from "viem";
 import { Button } from "../ui/button";
+import { formatAddress } from "../wallet/utils";
+import { useState } from "react";
+
+const MANAGER_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 export default function Entrance() {
-  const { isConnected } = useWallet();
+  const [ethAmount, setEthAmount] = useState<string>("");
+  const { address, isConnected } = useWallet();
   const {
     entranceFee,
     playerCount,
@@ -17,28 +22,46 @@ export default function Entrance() {
     isPicking,
   } = useRaffleContract();
 
+  const handleEnterRaffle = () => {
+    if (!ethAmount) {
+      return alert("请输入参与费用");
+    }
+    enterRaffle(ethAmount);
+  };
+
+  console.log(address, address === MANAGER_ADDRESS);
+
   return (
-    <div className="">
-      <h2 className="mb-5">🎉 抽奖活动</h2>
+    <div>
+      <h2 className="text-2xl mb-5">🎉 抽奖活动</h2>
 
       <div className="flex flex-col gap-2">
-        <StatItem
-          label="参与费用："
-          value={entranceFee ? `${formatEther(entranceFee)} ETH` : "加载中..."}
-        />
+        <div>
+          <span>参与费用：</span>
+          <input
+            className="border rounded-md px-2"
+            value={ethAmount}
+            onChange={(e) => setEthAmount(e.target.value)}
+            placeholder="至少0.001ETH"
+          ></input>
+        </div>
         <StatItem
           label="当前参与人数："
           value={playerCount?.toString() || "0"}
         />
         <StatItem
           label="最新赢家："
-          value={recentWinner ? shortenAddress(recentWinner) : "暂无"}
+          value={
+            recentWinner === "0x0000000000000000000000000000000000000000"
+              ? "暂无"
+              : formatAddress(recentWinner)
+          }
         />
       </div>
 
       <div className="flex gap-4 mt-5">
         <Button
-          onClick={enterRaffle}
+          onClick={handleEnterRaffle}
           disabled={!isConnected || isEntering}
           aria-busy={isEntering}
         >
@@ -47,7 +70,7 @@ export default function Entrance() {
 
         <Button
           onClick={pickWinner}
-          disabled={!isConnected || isPicking}
+          disabled={!isConnected || isPicking || address !== MANAGER_ADDRESS}
           aria-busy={isPicking}
         >
           {isPicking ? "开奖中..." : "管理员开奖"}
@@ -64,8 +87,4 @@ function StatItem({ label, value }: { label: string; value: string }) {
       <span className="value">{value}</span>
     </div>
   );
-}
-
-function shortenAddress(address?: string) {
-  return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
 }

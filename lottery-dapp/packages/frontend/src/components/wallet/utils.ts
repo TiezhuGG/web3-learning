@@ -1,5 +1,5 @@
-export function formatAddress(address: string) {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+export function formatAddress(address?: string) {
+  return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
 }
 
 export function copyToClipboard(text: string) {
