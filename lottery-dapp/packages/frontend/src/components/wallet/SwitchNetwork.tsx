@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAccount, useSwitchChain } from "wagmi";
-import { networks } from "./networks";
+import { networks } from "@/constants/networks";
 import { getFirstWord } from "@/lib/utils";
 
 export default function SwitchNetwork() {
@@ -17,6 +17,7 @@ export default function SwitchNetwork() {
 
   const mergedChains = chains.map((chain) => {
     const item = networks.find((network) => network.id === chain.id);
+
     return {
       ...chain,
       icon: item?.icon,
@@ -53,11 +54,15 @@ export default function SwitchNetwork() {
                     setIsOpen(false);
                   }}
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 ">
                     {chain.icon ? (
-                      <div className="rounded-full">{chain.icon}</div>
+                      <img
+                        src={chain.icon}
+                        alt={chain.name}
+                        className="w-6 h-6 rounded-full"
+                      />
                     ) : (
-                      <div className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black dark:text-white">
+                      <div className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black dark:text-white rounded-full">
                         {getFirstWord(chain.name)}
                       </div>
                     )}

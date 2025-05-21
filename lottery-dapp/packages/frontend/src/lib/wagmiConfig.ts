@@ -7,6 +7,8 @@ import {
   optimism,
   polygon,
   sepolia,
+  avalanche,
+  bsc,
 } from "wagmi/chains";
 import { coinbaseWallet, walletConnect } from "wagmi/connectors";
 
@@ -16,12 +18,24 @@ const WALLETCONNECT_PROJECT_ID =
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;
 
 export const config = createConfig({
-  chains: [mainnet, sepolia, hardhat, polygon, optimism, arbitrum, base],
+  chains: [
+    mainnet,
+    hardhat,
+    sepolia,
+    bsc,
+    avalanche,
+    base,
+    polygon,
+    optimism,
+    arbitrum,
+  ],
   transports: {
     [mainnet.id]: http(),
+    [bsc.id]: http(),
     [optimism.id]: http(),
     [arbitrum.id]: http(),
     [base.id]: http(),
+    [avalanche.id]: http(),
     [polygon.id]: http(),
     [sepolia.id]: http(SEPOLIA_RPC_URL),
     [hardhat.id]: http(HARDHAT_RPC_URL),

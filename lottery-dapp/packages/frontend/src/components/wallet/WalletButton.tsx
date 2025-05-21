@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -10,7 +11,7 @@ import { useState } from "react";
 import { copyToClipboard, formatAddress, getFirstWord } from "@/lib/utils";
 import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import SwitchNetwork from "./SwitchNetwork";
-import { networks } from "./networks";
+import { networks } from "@/constants/networks";
 
 export default function ConnectedWallet() {
   const { address, chain: currentChain } = useAccount();
@@ -22,8 +23,9 @@ export default function ConnectedWallet() {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const chain = (networks.find((network) => network.id === currentChain?.id) ??
-    currentChain) as (typeof networks)[number];
+  const chain =
+    networks.find((network) => network.id === currentChain?.id)! ??
+    currentChain;
 
   const handleCopyAddress = () => {
     if (address) {
@@ -55,12 +57,16 @@ export default function ConnectedWallet() {
         </DialogTrigger>
 
         <DialogContent className="sm:max-w-[425px]">
-          <DialogTitle></DialogTitle>
+          <DialogTitle />
           <div className="flex flex-col justify-center items-center">
             {chain.icon ? (
-              <div className="rounded-full">{chain.icon}</div>
+              <img
+                src={chain.icon}
+                alt={chain.name}
+                className="w-18 h-18 rounded-full"
+              />
             ) : (
-              <div className="w-[24px] h-[24px] rounded-full text-center leading-[24px] bg-gray-100 text-black dark:text-white">
+              <div className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black dark:text-white">
                 {getFirstWord(chain.name)}
               </div>
             )}
@@ -72,7 +78,7 @@ export default function ConnectedWallet() {
             </div>
 
             <div className="w-full flex gap-5" onClick={handleCopyAddress}>
-              <Button className="flex-1 h-auto mt-4 py-5">
+              <Button className="flex-1 h-auto mt-4 py-3">
                 {copied ? (
                   <Check className="w-4 h-4" />
                 ) : (
@@ -81,7 +87,7 @@ export default function ConnectedWallet() {
                 {copied ? "Copied" : "Copy Address"}
               </Button>
               <Button
-                className="flex-1 h-auto mt-4 py-5"
+                className="flex-1 h-auto mt-4 py-3"
                 onClick={() => disconnect()}
               >
                 <LogOut className="w-4 h-4" />
