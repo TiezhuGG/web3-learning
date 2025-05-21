@@ -1,10 +1,11 @@
 "use client";
-import { useAccount } from "wagmi";
+
 import WalletButton from "./WalletButton";
 import ConnectButton from "./ConnectButton";
+import { useWallet } from "../hooks/useWallet";
 
 export default function WalletConnect() {
-  const { isConnected } = useAccount();
+  const { isConnected } = useWallet();
 
   return <>{isConnected ? <WalletButton /> : <ConnectButton />}</>;
 }

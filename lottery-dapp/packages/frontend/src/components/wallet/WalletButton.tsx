@@ -1,31 +1,20 @@
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAccount, useBalance, useDisconnect } from "wagmi";
 import { useState } from "react";
-import { copyToClipboard, formatAddress, getFirstWord } from "@/lib/utils";
+import { copyToClipboard, formatAddress, getFirstWord } from "./utils";
 import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import SwitchNetwork from "./SwitchNetwork";
-import { networks } from "@/constants/networks";
+import { useWallet } from "../hooks/useWallet";
 
 export default function ConnectedWallet() {
-  const { address, chain: currentChain } = useAccount();
-  const { data: balanceData } = useBalance({
-    address,
-  });
-  const { disconnect } = useDisconnect();
-
+  const { address, chain, balanceData, disconnect } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const chain =
-    networks.find((network) => network.id === currentChain?.id)! ??
-    currentChain;
 
   const handleCopyAddress = () => {
     if (address) {
@@ -43,7 +32,7 @@ export default function ConnectedWallet() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
-            className="justify-between shadow-md font-bold py-2
+            className="shadow-md font-bold py-2 rounded-xl
             transform hover:scale-105 transition-transform duration-300"
           >
             <p>
@@ -59,7 +48,7 @@ export default function ConnectedWallet() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogTitle />
           <div className="flex flex-col justify-center items-center">
-            {chain.icon ? (
+            {chain?.icon ? (
               <img
                 src={chain.icon}
                 alt={chain.name}
@@ -67,7 +56,7 @@ export default function ConnectedWallet() {
               />
             ) : (
               <div className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black dark:text-white">
-                {getFirstWord(chain.name)}
+                {getFirstWord(chain?.name!)}
               </div>
             )}
             <div className="text-center mt-3">

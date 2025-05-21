@@ -1,8 +1,4 @@
-interface NetWorkProps {
-  id: number;
-  name: string;
-  icon: string;
-}
+import { NetWorkProps } from "@/types";
 
 export const networks: NetWorkProps[] = [
   {

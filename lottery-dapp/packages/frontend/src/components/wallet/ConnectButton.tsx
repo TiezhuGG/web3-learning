@@ -1,6 +1,5 @@
 "use client";
 
-import { useConnect } from "wagmi";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Wallet } from "lucide-react";
 import { useState } from "react";
+import { useWallet } from "../hooks/useWallet";
 
 const walletIcons: Record<string, string> = {
   WalletConnect: "/assets/wallet/WalletConnect.png",
@@ -19,17 +19,18 @@ const walletIcons: Record<string, string> = {
 };
 
 export default function ConnectButton() {
-  const { connect, connectors, isPending } = useConnect();
+  const { connect, connectors, isConnecting } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button disabled={isPending}>
+        <Button disabled={isConnecting} className="rounded-xl">
           <Wallet className="w-4 h-4" />
-          {isPending ? "Connecting..." : "Connect Wallet"}
+          {isConnecting ? "Connecting..." : "Connect Wallet"}
         </Button>
       </DialogTrigger>
+
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Connect Wallet</DialogTitle>

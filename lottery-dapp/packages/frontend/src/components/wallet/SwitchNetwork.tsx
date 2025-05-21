@@ -6,33 +6,38 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { useAccount, useSwitchChain } from "wagmi";
-import { networks } from "@/constants/networks";
-import { getFirstWord } from "@/lib/utils";
+import { getFirstWord } from "./utils";
+import { useWallet } from "../hooks/useWallet";
+import { ChevronDown } from "lucide-react";
 
 export default function SwitchNetwork() {
+  const {
+    chain: currentChain,
+    chains,
+    switchChainAsync,
+    isSwitching,
+  } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
-  const { chain: currentChain } = useAccount();
-  const { chains, switchChain } = useSwitchChain();
+  const [switchingChainId, setSwitchingChainId] = useState<number | null>(null);
 
-  const mergedChains = chains.map((chain) => {
-    const item = networks.find((network) => network.id === chain.id);
-
-    return {
-      ...chain,
-      icon: item?.icon,
-    };
-  });
+  const handleSwitchChain = async (chainId: number) => {
+    setSwitchingChainId(chainId);
+    await switchChainAsync({ chainId });
+    setIsOpen(false);
+  };
 
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
-            className="justify-between shadow-md font-bold py-2
+            className="shadow-md font-bold py-2 rounded-xl
             transform hover:scale-105 transition-transform duration-300"
           >
-            {currentChain?.name}
+            <p className="flex items-center">
+              <span>{currentChain?.name}</span>
+              <ChevronDown className="w-4 h-4 ml-1" />
+            </p>
           </Button>
         </DialogTrigger>
 
@@ -40,18 +45,21 @@ export default function SwitchNetwork() {
           <DialogTitle>Switch Network</DialogTitle>
 
           <div className="space-y-4">
-            {mergedChains.map((chain) => {
+            {chains.map((chain) => {
+              const isConnectedChain = chain.id === currentChain?.id;
+              const isPendingChain =
+                isSwitching && switchingChainId === chain.id;
+
               return (
                 <div
                   key={chain.id}
                   className={`${
-                    currentChain?.id === chain.id
+                    isConnectedChain
                       ? "text-white bg-blue-500"
                       : "hover:bg-gray-100"
                   } p-2 rounded-md flex justify-between items-center cursor-pointer`}
                   onClick={() => {
-                    switchChain({ chainId: chain.id });
-                    setIsOpen(false);
+                    if (!isConnectedChain) handleSwitchChain(chain.id);
                   }}
                 >
                   <div className="flex gap-3 ">
@@ -70,10 +78,14 @@ export default function SwitchNetwork() {
                   </div>
                   <p className="flex items-center gap-2">
                     <span className="font-bold text-sm">
-                      {currentChain?.id === chain.id ? "已连接" : ""}
+                      {isConnectedChain ? "已连接" : ""}
+                      {isPendingChain ? "等待钱包确认..." : ""}
                     </span>
-                    {currentChain?.id === chain.id && (
+                    {isConnectedChain && (
                       <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                    )}
+                    {isPendingChain && (
+                      <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                     )}
                   </p>
                 </div>
