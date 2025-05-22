@@ -6,11 +6,15 @@ import {
 } from "wagmi";
 import { Address, parseEther } from "viem";
 
+const contractConfig = {
+  address: CONTRACT_ADDRESS,
+  abi: ABI,
+} as const;
+
 export const useRaffleContract = () => {
   // 读取彩票入场费
   const { data: entranceFee } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    ...contractConfig,
     functionName: "getEntranceFee",
     query: {
       staleTime: Infinity, // 费用通常不会变，可以设置较长的缓存时间
@@ -19,15 +23,13 @@ export const useRaffleContract = () => {
 
   // 读取彩票参与者数量
   const { data: playerCount, refetch: refetchPlayerCount } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    ...contractConfig,
     functionName: "getNumberOfPlayers",
   });
 
   // 监听RaffleEnter事件
   useWatchContractEvent({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    ...contractConfig,
     eventName: "RaffleEnter",
     onLogs: (logs) => {
       console.log("New Raffle Entered:", logs);
@@ -37,15 +39,13 @@ export const useRaffleContract = () => {
 
   // 读取最近获奖者
   const { data: recentWinner, refetch: refetchWinner } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    ...contractConfig,
     functionName: "getRecentWinner",
   });
 
   // 监听WinnerPicked事件
   useWatchContractEvent({
-    address: CONTRACT_ADDRESS,
-    abi: ABI,
+    ...contractConfig,
     eventName: "WinnerPicked",
     onLogs: (logs) => {
       console.log("New Winner Picked:", logs);

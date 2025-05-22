@@ -29,8 +29,6 @@ export default function Entrance() {
     enterRaffle(ethAmount);
   };
 
-  console.log(address, address === MANAGER_ADDRESS);
-
   return (
     <div>
       <h2 className="text-2xl mb-5">🎉 抽奖活动</h2>
