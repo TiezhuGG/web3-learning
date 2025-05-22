@@ -6,6 +6,8 @@
   "main": "index.js",
   "scripts": {
     "contract:dev": "pnpm --filter @lottery/contracts dev",
+    "contract:compile": "pnpm --filter @lottery/contracts compile",
+    "contract:deploy": "pnpm --filter @lottery/contracts deploy:localhost",
     "frontend:dev": "pnpm --filter @lottery/frontend dev"
   },
   "keywords": [],
