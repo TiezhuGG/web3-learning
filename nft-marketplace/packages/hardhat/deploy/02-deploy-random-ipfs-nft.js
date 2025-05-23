@@ -11,6 +11,18 @@ const {
 
 const imagesLocation = "./images/randomNft/";
 
+const metadataTemplate = {
+  name: "",
+  description: "",
+  image: "",
+  attributes: [
+    {
+      trait_type: "",
+      value: 100,
+    },
+  ],
+};
+
 module.exports = async function ({ getNamedAccounts, deployments }) {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -27,14 +39,10 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
   log("Deploying RandomIpfsNft and waiting for confirmations...");
 
-  await storeImages(imagesLocation);
-
   // 如果需要，上传图片到IPFS
-  // if (process.env.UPLOAD_TO_PINATA == "true") {
-  //   console.log("Uploading images to Pinata...", tokenUris);
-  //   tokenUris = await handleTokenUris();
-  //   console.log("曹操", tokenUris);
-  // }
+  if (process.env.UPLOAD_TO_PINATA == "true") {
+    tokenUris = await handleTokenUris();
+  }
 
   const mintFee = networkConfig[chainId].mintFee || ethers.parseEther("0.001");
   const args = [linkTokenAddress, vrfWrapperAddress, tokenUris, mintFee];
@@ -60,38 +68,37 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 };
 
 async function handleTokenUris() {
-  const tokenList = [];
-    // const { responses: imageUploadResponses, files } = await storeImages(
-    //   imagesLocation
-    // );
+  const tokenUriList = [];
+  const { responses: imageUploadResponses, files } = await storeImages(
+    imagesLocation
+  );
 
-  //   for (const imageUploadResponseIndex in imageUploadResponses) {
-  //     const imageUploadResponse = imageUploadResponses[imageUploadResponseIndex];
+  for (const imageUploadResponseIndex in imageUploadResponses) {
+    const imageUploadResponse = imageUploadResponses[imageUploadResponseIndex];
+    console.log("imageUploadResponse", imageUploadResponse);
 
-  //     // 创建元数据
-  //     const tokenUriMetadata = {
-  //       name: files[imageUploadResponseIndex]?.replace(".png", ""),
-  //       description: `An adorable ${files[imageUploadResponseIndex]?.replace(
-  //         ".png",
-  //         ""
-  //       )}!`,
-  //       image: `ipfs://${imageUploadResponse}`,
-  //       attributes: [
-  //         {
-  //           trait_type: "Cuteness",
-  //           value: Math.floor(Math.random() * 100),
-  //         },
-  //       ],
-  //     };
+    // 创建元数据
+    const tokenUriMetadata = { ...metadataTemplate };
 
-  //     const metadataUploadResponse = await storeTokenUriMetadata(
-  //       tokenUriMetadata
-  //     );
-  //     tokenList.push(`ipfs://${metadataUploadResponse}`);
-  //   }
+    tokenUriMetadata.name = files[imageUploadResponseIndex]?.replace(
+      ".png",
+      ""
+    );
+    tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name}`;
+    tokenUriMetadata.image = `ipfs://${imageUploadResponse.IpfsHash}`;
 
-  console.log(`Token URIs uploaded! They are: ${tokenList}`);
-  return tokenList;
+    console.log("Uploading tokenUriMetadata", tokenUriMetadata);
+
+    const metadataUploadResponse = await storeTokenUriMetadata(
+      tokenUriMetadata
+    );
+
+    tokenUriList.push(`ipfs://${metadataUploadResponse}`);
+  }
+
+  console.log(`Token URIs uploaded! They are:`);
+  console.log(tokenUriList);
+  return tokenUriList;
 }
 
 module.exports.tags = ["all", "randomIpfsNft", "main"];

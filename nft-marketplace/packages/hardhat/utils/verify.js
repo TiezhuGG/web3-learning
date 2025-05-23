@@ -1,4 +1,4 @@
-export async function verify(contractAddress, args) {
+async function verify(contractAddress, args) {
   console.log("Verifying contract...");
   try {
     await run("verify:verify", {
@@ -13,3 +13,5 @@ export async function verify(contractAddress, args) {
     }
   }
 }
+
+module.exports = { verify };

@@ -1,17 +1,59 @@
-import { PinataSDK } from "pinata";
-import path from "path";
-import fs from "fs";
+const pinataSDK = require("@pinata/sdk");
+const path = require("path");
+const fs = require("fs");
+require("dotenv").config();
 
-const pinata = new PinataSDK({
-  pinataJwt: process.env.PINATA_API_JWT,
-  pinataGateway: "example-gateway.mypinata.cloud",
-});
+const pinataApiKey = process.env.PINATA_API_KEY;
+const pinataApiSecret = process.env.PINATA_API_SECRET;
+const pinata = new pinataSDK(pinataApiKey, pinataApiSecret);
 
-export async function storeImages(imagesFilePath) {
+async function storeImages(imagesFilePath) {
   const fullImagesPath = path.resolve(imagesFilePath);
   const files = fs.readdirSync(fullImagesPath);
-  console.log("上传图片到pinata", files);
+  let responses = [];
+  console.log("Uploading to IPFS...");
+
+  for (const fileIndex in files) {
+    console.log(`上传图片${files[fileIndex]}中...`);
+    const readableStreamForFile = fs.createReadStream(
+      `${fullImagesPath}/${files[fileIndex]}`
+    );
+    try {
+      const options = {
+        pinataMetadata: {
+          name: files[fileIndex],
+        },
+      };
+      const response = await pinata.pinFileToIPFS(
+        readableStreamForFile,
+        options
+      );
+      
+      responses.push(response);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  return { responses, files };
 }
 
-export async function storeTokenUriMetadata() {}
+async function storeTokenUriMetadata(metadata) {
+  try {
+    const options = {
+      pinataMetadata: {
+        name: metadata.name,
+      },
+    };
+    const response = await pinata.pinJSONToIPFS(metadata, options);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+  return null;
+}
 
+module.exports = {
+  storeImages,
+  storeTokenUriMetadata,
+};
