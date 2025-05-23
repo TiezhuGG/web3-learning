@@ -75,7 +75,6 @@ async function handleTokenUris() {
 
   for (const imageUploadResponseIndex in imageUploadResponses) {
     const imageUploadResponse = imageUploadResponses[imageUploadResponseIndex];
-    console.log("imageUploadResponse", imageUploadResponse);
 
     // 创建元数据
     const tokenUriMetadata = { ...metadataTemplate };
@@ -86,8 +85,6 @@ async function handleTokenUris() {
     );
     tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name}`;
     tokenUriMetadata.image = `ipfs://${imageUploadResponse.IpfsHash}`;
-
-    console.log("Uploading tokenUriMetadata", tokenUriMetadata);
 
     const metadataUploadResponse = await storeTokenUriMetadata(
       tokenUriMetadata

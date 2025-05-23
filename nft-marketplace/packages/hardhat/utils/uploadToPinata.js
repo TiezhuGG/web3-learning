@@ -11,10 +11,9 @@ async function storeImages(imagesFilePath) {
   const fullImagesPath = path.resolve(imagesFilePath);
   const files = fs.readdirSync(fullImagesPath);
   let responses = [];
-  console.log("Uploading to IPFS...");
 
   for (const fileIndex in files) {
-    console.log(`上传图片${files[fileIndex]}中...`);
+    console.log(`Uploading Image to IPFS: ${files[fileIndex]}...`);
     const readableStreamForFile = fs.createReadStream(
       `${fullImagesPath}/${files[fileIndex]}`
     );
@@ -28,7 +27,7 @@ async function storeImages(imagesFilePath) {
         readableStreamForFile,
         options
       );
-      
+
       responses.push(response);
     } catch (error) {
       console.log(error);
