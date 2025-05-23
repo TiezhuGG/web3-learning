@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 // Check out https://github.com/Fantom-foundation/Artion-Contracts/blob/5c90d2bc0401af6fb5abf35b860b762b31dfee02/contracts/FantomMarketplace.sol
 // For a full decentralized nft marketplace
@@ -19,7 +18,7 @@ error PriceMustBeAboveZero();
 // Error thrown for isNotOwner modifier
 // error IsNotOwner()
 
-contract NftMarketplace is ReentrancyGuard {
+contract NftMarketplace {
     struct Listing {
         uint256 price;
         address seller;
@@ -155,7 +154,6 @@ contract NftMarketplace is ReentrancyGuard {
         payable
         isListed(nftAddress, tokenId)
         // isNotOwner(nftAddress, tokenId, msg.sender)
-        nonReentrant
     {
         // Challenge - How would you refactor this contract to take:
         // 1. Abitrary tokens as payment? (HINT - Chainlink Price Feeds!)
@@ -190,7 +188,6 @@ contract NftMarketplace is ReentrancyGuard {
     )
         external
         isListed(nftAddress, tokenId)
-        nonReentrant
         isOwner(nftAddress, tokenId, msg.sender)
     {
         //We should check the value of `newPrice` and revert if it's below zero (like we also check in `listItem()`)
