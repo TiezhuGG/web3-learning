@@ -3,13 +3,13 @@ export const RANDOM_IPFS_NFT_ABI = [
     inputs: [
       {
         internalType: "address",
-        name: "linkAddress",
+        name: "vrfCoordinatorV2_5",
         type: "address",
       },
       {
-        internalType: "address",
-        name: "wrapperAddress",
-        type: "address",
+        internalType: "uint256",
+        name: "subscriptionId",
+        type: "uint256",
       },
       {
         internalType: "string[3]",
@@ -132,22 +132,37 @@ export const RANDOM_IPFS_NFT_ABI = [
     inputs: [
       {
         internalType: "address",
-        name: "owner",
+        name: "have",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "want",
         type: "address",
       },
     ],
-    name: "OwnableInvalidOwner",
+    name: "OnlyCoordinatorCanFulfill",
     type: "error",
   },
   {
     inputs: [
       {
         internalType: "address",
-        name: "account",
+        name: "have",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "coordinator",
         type: "address",
       },
     ],
-    name: "OwnableUnauthorizedAccount",
+    name: "OnlyOwnerOrCoordinator",
     type: "error",
   },
   {
@@ -163,6 +178,11 @@ export const RANDOM_IPFS_NFT_ABI = [
   {
     inputs: [],
     name: "RandomIpfsNft_TransferFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ZeroAddress",
     type: "error",
   },
   {
@@ -239,6 +259,19 @@ export const RANDOM_IPFS_NFT_ABI = [
     inputs: [
       {
         indexed: false,
+        internalType: "address",
+        name: "vrfCoordinator",
+        type: "address",
+      },
+    ],
+    name: "CoordinatorSet",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "uint256",
         name: "_tokenId",
         type: "uint256",
@@ -291,13 +324,32 @@ export const RANDOM_IPFS_NFT_ABI = [
       {
         indexed: true,
         internalType: "address",
-        name: "previousOwner",
+        name: "from",
         type: "address",
       },
       {
         indexed: true,
         internalType: "address",
-        name: "newOwner",
+        name: "to",
+        type: "address",
+      },
+    ],
+    name: "OwnershipTransferRequested",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "to",
         type: "address",
       },
     ],
@@ -328,6 +380,13 @@ export const RANDOM_IPFS_NFT_ABI = [
     ],
     name: "Transfer",
     type: "event",
+  },
+  {
+    inputs: [],
+    name: "acceptOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
     inputs: [
@@ -535,23 +594,16 @@ export const RANDOM_IPFS_NFT_ABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_requestId",
+        name: "requestId",
         type: "uint256",
       },
       {
         internalType: "uint256[]",
-        name: "_randomWords",
+        name: "randomWords",
         type: "uint256[]",
       },
     ],
     name: "rawFulfillRandomWords",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "renounceOwnership",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -567,6 +619,32 @@ export const RANDOM_IPFS_NFT_ABI = [
       },
     ],
     stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "s_subscriptionId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "s_vrfCoordinator",
+    outputs: [
+      {
+        internalType: "contract IVRFCoordinatorV2Plus",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -634,6 +712,19 @@ export const RANDOM_IPFS_NFT_ABI = [
       },
     ],
     name: "setApprovalForAll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_vrfCoordinator",
+        type: "address",
+      },
+    ],
+    name: "setCoordinator",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -716,7 +807,7 @@ export const RANDOM_IPFS_NFT_ABI = [
     inputs: [
       {
         internalType: "address",
-        name: "newOwner",
+        name: "to",
         type: "address",
       },
     ],
@@ -735,4 +826,4 @@ export const RANDOM_IPFS_NFT_ABI = [
 ];
 
 export const RANDOM_IPFS_NFT_CONTRACT_ADDRESS =
-  "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+  "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";

@@ -1,3 +1,4 @@
+import { NFT_MARKETPLACE_NFT_ABI, NFT_MARKETPLACE_CONTRACT_ADDRESS } from './../constants/nftMarketplace';
 import { useCallback } from "react";
 import { parseEther } from "viem";
 import {
@@ -8,132 +9,8 @@ import {
 } from "wagmi";
 
 // 这里需要替换为实际部署后的合约地址
-const MARKETPLACE_ADDRESS = "YOUR_MARKETPLACE_ADDRESS";
-const NFT_ADDRESS = "YOUR_NFT_ADDRESS";
+const NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
-const MARKETPLACE_ABI = [
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "nftAddress",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "buyItem",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "nftAddress",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "cancelListing",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "nftAddress",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "getListing",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "price",
-            type: "uint256",
-          },
-          {
-            internalType: "address",
-            name: "seller",
-            type: "address",
-          },
-        ],
-        internalType: "struct NftMarketplace.Listing",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "seller",
-        type: "address",
-      },
-    ],
-    name: "getProceeds",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "nftAddress",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "price",
-        type: "uint256",
-      },
-    ],
-    name: "listItem",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "withdrawProceeds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as const;
 
 export interface Listing {
   price: bigint;
@@ -145,8 +22,8 @@ export function useMarketplace() {
   const { writeContractAsync } = useWriteContract();
 
   const { data: proceeds } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
-    abi: MARKETPLACE_ABI,
+    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+    abi: NFT_MARKETPLACE_NFT_ABI,
     functionName: "getProceeds",
     args: [address!],
     query: {
@@ -155,8 +32,8 @@ export function useMarketplace() {
   });
 
   const { data: listing, refetch: refetchListing } = useReadContract({
-    address: MARKETPLACE_ADDRESS,
-    abi: MARKETPLACE_ABI,
+    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+    abi: NFT_MARKETPLACE_NFT_ABI,
     functionName: "getListing",
     args: [NFT_ADDRESS, 0n],
   });
@@ -166,8 +43,8 @@ export function useMarketplace() {
       if (!address) throw new Error("No wallet connected");
 
       const hash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
-        abi: MARKETPLACE_ABI,
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "listItem",
         args: [NFT_ADDRESS, tokenId, price],
       });
@@ -182,8 +59,8 @@ export function useMarketplace() {
       if (!address) throw new Error("No wallet connected");
 
       const hash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
-        abi: MARKETPLACE_ABI,
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "buyItem",
         args: [NFT_ADDRESS, tokenId],
         value: price,
@@ -199,8 +76,8 @@ export function useMarketplace() {
       if (!address) throw new Error("No wallet connected");
 
       const hash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
-        abi: MARKETPLACE_ABI,
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "cancelListing",
         args: [NFT_ADDRESS, tokenId],
       });
@@ -214,8 +91,8 @@ export function useMarketplace() {
     if (!address) throw new Error("No wallet connected");
 
     const hash = await writeContractAsync({
-      address: MARKETPLACE_ADDRESS,
-      abi: MARKETPLACE_ABI,
+      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+      abi: NFT_MARKETPLACE_NFT_ABI,
       functionName: "withdrawProceeds",
     });
 
