@@ -2,58 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import { useAccount, useReadContract, useWatchContractEvent } from "wagmi";
-
+import { NftMetadata, UserNft } from "@/types";
 import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { JsonRpcProvider, ethers } from "ethers"; // 用于获取 NFT 所有者
-
-interface NftMetadata {
-  name: string;
-  description: string;
-  image: string;
-  attributes: { trait_type: string; value: number | string }[];
-}
-
-interface UserNft {
-  tokenId: bigint;
-  tokenUri: string;
-  metadata: NftMetadata | null;
-  loadingMetadata: boolean;
-  errorLoadingMetadata: boolean;
-}
-
-const NftCard = ({ nft }: { nft: UserNft }) => {
-  const imageUrl = nft.metadata?.image
-    ? nft.metadata.image.replace("ipfs://", "https://ipfs.io/ipfs/")
-    : "/placeholder-nft.png"; // 假设你有一个占位符图片
-  const name = nft.metadata?.name || `NFT #${nft.tokenId.toString()}`;
-  const description = nft.metadata?.description || "No description available.";
-
-  return (
-    <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform transition duration-300 hover:scale-105">
-      <img
-        src={imageUrl}
-        alt={name}
-        className="w-full h-48 object-cover border-b border-gray-700"
-      />
-      <div className="p-4">
-        <h3 className="text-xl font-semibold text-white mb-2">{name}</h3>
-        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{description}</p>
-        <p className="text-gray-300 text-sm">
-          Token ID: <span className="font-mono">{nft.tokenId.toString()}</span>
-        </p>
-        {nft.loadingMetadata && (
-          <p className="text-blue-400 text-xs mt-2">Loading metadata...</p>
-        )}
-        {nft.errorLoadingMetadata && (
-          <p className="text-red-400 text-xs mt-2">Error loading metadata.</p>
-        )}
-      </div>
-    </div>
-  );
-};
+import NftCard from "@/components/NftCard";
 
 export function NftGallery() {
   const { address: accountAddress } = useAccount();
@@ -99,8 +54,9 @@ export function NftGallery() {
       // 从 IPFS 获取元数据
       if (tokenUri.startsWith("ipfs://")) {
         const ipfsHash = tokenUri.replace("ipfs://", "");
-        const gatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`; // 使用公共 IPFS 网关
+        // const gatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`; // 使用公共 IPFS 网关
         // 或者使用 Pinata 网关：`https://gateway.pinata.cloud/ipfs/${ipfsHash}`
+        const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
         const response = await fetch(gatewayUrl);
         if (!response.ok) throw new Error("Failed to fetch metadata");
         metadata = await response.json();
@@ -143,24 +99,29 @@ export function NftGallery() {
         RANDOM_IPFS_NFT_ABI,
         provider
       );
-      
+
       const fetchPromises = [];
 
       for (let i = 0n; i < tokenCounter; i++) {
-        fetchPromises.push((async () => {
-          try {
-            const owner = await nftContract.ownerOf(i);
-            if (owner.toLowerCase() === accountAddress.toLowerCase()) {
-              return await fetchNftDetails(i);
+        fetchPromises.push(
+          (async () => {
+            try {
+              const owner = await nftContract.ownerOf(i);
+              if (owner.toLowerCase() === accountAddress.toLowerCase()) {
+                return await fetchNftDetails(i);
+              }
+            } catch (e) {
+              console.warn(
+                `Could not get owner or details for token ID ${i}:`,
+                e
+              );
             }
-          } catch (e) {
-            console.warn(`Could not get owner or details for token ID ${i}:`, e);
-          }
-          return null;
-        })());
+            return null;
+          })()
+        );
       }
       const results = await Promise.all(fetchPromises);
-      setUserNfts(results.filter(nft => nft !== null) as UserNft[]);
+      setUserNfts(results.filter((nft) => nft !== null) as UserNft[]);
       // setUserNfts(tempNfts);
       setIsLoadingGallery(false);
     };
@@ -191,7 +152,7 @@ export function NftGallery() {
   useWatchContractEvent({
     address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
     abi: RANDOM_IPFS_NFT_ABI,
-    eventName: 'NFTMinted',
+    eventName: "NFTMinted",
     onLogs: () => {
       refetchTokenCounter(); // 刷新总数，这将触发 useEffect 重新加载
     },

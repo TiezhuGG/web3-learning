@@ -21,7 +21,7 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { Button } from "./ui/Button";
+import { Button } from "@/components/ui/button";
 
 // const chainId = 31337;
 // const NFT_MARKETPLACE_CONTRACT_ADDRESS = deployedContracts[chainId]?.hardhat?.[

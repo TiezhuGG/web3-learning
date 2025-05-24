@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import {
-  useAccount,
   useReadContract,
   useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
   useWatchContractEvent,
+  type UseReadContractParameters,
 } from "wagmi";
 import {
   MOCK_VRF_ABI,
@@ -15,30 +15,31 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { decodeEventLog, parseEther } from "viem";
-import { Button } from "./ui/button";
+import { decodeEventLog, formatEther, parseEther } from "viem";
+import { Button } from "@/components/ui/button";
+import { useWallet } from "@/hooks/useWallet";
+import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
+
+const randomContractConfig: UseReadContractParameters = {
+  address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+  abi: RANDOM_IPFS_NFT_ABI,
+};
 
 export function NftMinting() {
-  const { address: accountAddress, chainId } = useAccount();
+  const { address: accountAddress } = useWallet();
+  const { mintFee, chainId } = useMintRandomNFT();
   const [requestId, setRequestId] = useState<bigint | null>(null);
   const [mintedTokenId, setMintedTokenId] = useState<bigint | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>("");
 
-  // 1. 获取铸造费用
-  const { data: mintFeeData, isLoading: isLoadingMintFee } = useReadContract({
-    address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-    abi: RANDOM_IPFS_NFT_ABI,
-    functionName: "getMintFee",
-  });
-  const mintFee = mintFeeData as bigint | undefined;
-
+  // 1. 读取 mintFee
   // 2. 模拟 requestNft 交易
   const { data: simulateRequestNftData, error: simulateRequestNftError } =
     useSimulateContract({
       address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
       abi: RANDOM_IPFS_NFT_ABI,
       functionName: "requestNft",
-      value: mintFee || parseEther("0.01"), // 默认值以防万一
+      value: mintFee ?? parseEther("0.01"),
       account: accountAddress,
     });
 
@@ -60,8 +61,7 @@ export function NftMinting() {
 
   // 5. 监听 NFTRequested 事件 (从 RandomIpfsNft 合约)
   useWatchContractEvent({
-    address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-    abi: RANDOM_IPFS_NFT_ABI,
+    ...randomContractConfig,
     eventName: "NFTRequested",
     onLogs: (logs) => {
       console.log("NFTRequested logs:", logs);
@@ -115,41 +115,10 @@ export function NftMinting() {
       hash: fulfillHash,
     });
 
-  // 7. 监听 NFTMinted 事件 (从 RandomIpfsNft 合约)
-  useWatchContractEvent({
-    address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-    abi: RANDOM_IPFS_NFT_ABI,
-    eventName: "NFTMinted",
-    onLogs: (logs) => {
-      console.log("NFTMinted logs:", logs);
-      if (logs.length > 0) {
-        const log = logs[0];
-        const parsedLog = RANDOM_IPFS_NFT_ABI.filter(
-          (item) => item.type === "event" && item.name === "NFTMinted"
-        )[0];
-        if (parsedLog) {
-          const decodedArgs = decodeEventLog({
-            abi: RANDOM_IPFS_NFT_ABI,
-            eventName: "NFTMinted",
-            data: log.data,
-            topics: log.topics,
-          });
-          const tokenId = decodedArgs.args.tokenId as bigint;
-          setMintedTokenId(tokenId);
-          setLoadingMessage(`NFT Minted! Token ID: ${tokenId}.`);
-          console.log("Decoded NFTMinted event args:", decodedArgs.args);
-          setRequestId(null); // 清除 requestId
-        }
-      }
-    },
-    onError: (error) => {
-      console.error("Error watching NFTMinted event:", error);
-    },
-  });
-
   const handleMint = async () => {
     if (!writeRequestNft || !simulateRequestNftData?.request) return;
     setLoadingMessage("Requesting NFT...");
+
     try {
       await writeRequestNft(simulateRequestNftData.request);
     } catch (e) {
@@ -159,6 +128,7 @@ export function NftMinting() {
   };
 
   useEffect(() => {
+    console.log('我操，被监听到了，', isRequestNftConfirmed, requestId)
     // 只有在请求被确认且是本地链时才尝试 fulfill
     if (isRequestNftConfirmed && requestId !== null && chainId === 31337) {
       setLoadingMessage("Request confirmed. Fulfilling randomness on mock...");
@@ -195,12 +165,7 @@ export function NftMinting() {
     <div className="p-6 bg-card-bg rounded-lg shadow-md border border-gray-700">
       <div className="flex items-center mb-4">
         <p className="text-lg font-medium text-gray-300">
-          Mint Fee:{" "}
-          {isLoadingMintFee
-            ? "Loading..."
-            : mintFee
-            ? `${parseFloat(mintFee.toString()) / 1e18} ETH`
-            : "N/A"}
+          Mint Fee: {formatEther(mintFee!)} ETH
         </p>
       </div>
 
@@ -211,8 +176,7 @@ export function NftMinting() {
           isRequestingNft ||
           isRequestNftConfirming ||
           isFulfilling ||
-          isFulfillConfirming ||
-          isLoadingMintFee
+          isFulfillConfirming
         }
         className=" text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
       >
@@ -242,7 +206,7 @@ export function NftMinting() {
 
       {mintedTokenId !== null && (
         <p className="mt-4 text-sm text-accent-green">
-          🎉 Successfully Minted NFT with Token ID: {mintedTokenId.toString()}!
+          🎉 Successfully Minted NFT with Token ID: {mintedTokenId}!
         </p>
       )}
     </div>
