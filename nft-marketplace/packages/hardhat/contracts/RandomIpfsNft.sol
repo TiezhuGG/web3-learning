@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@chainlink/contracts/src/v0.8/vrf/VRFV2WrapperConsumerBase.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 error RandomIpfsNft_RangeOutOfBounds();
 error RandomIpfsNft_NeedMoreETHSent();
 error RandomIpfsNft_TransferFailed();
 
-contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
-    // Address LINK - hardcoded for Sepolia
-    // address public linkAddress = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
-
-    // address WRAPPER - hardcoded for Sepolia
-    // address public wrapperAddress = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1;
-
+contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
     // 类型声明
     enum Rarity {
         COMMON,
@@ -25,11 +20,13 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
 
     // VRF配置
     // 回调函数消耗的gas限制
-    uint32 private constant CALLBACK_GAS_LIMIT = 500000;
+    uint32 private constant CALLBACK_GAS_LIMIT = 300000;
     // 请求确认数
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     // 请求随机数个数
     uint32 private constant NUM_WORDS = 1;
+    // 订阅ID
+    uint256 public s_subscriptionId;
 
     // NFT变量
     // 铸造费用
@@ -40,6 +37,8 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
     uint256 internal constant MAX_CHANCE_VALUE = 100;
     // NFT的URI
     string[] internal s_tokenURIs;
+    bytes32 KEY_HASH =
+        0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae;
 
     // VRF请求追踪
     // 请求ID到发送者的映射
@@ -49,34 +48,52 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
     event NFTMinted(Rarity rarity, address minter);
 
     constructor(
-        address linkAddress, // VRF合约地址
-        address wrapperAddress, // VRF包装器地址
+        address vrfCoordinatorV2_5, // VRF Coordinator地址
+        uint256 subscriptionId, // 订阅ID
         string[3] memory tokenURIs, // NFT的URI
         uint256 mintFee // 铸造费用
     )
         ERC721("Random IPFS NFT", "RIN")
-        VRFV2WrapperConsumerBase(linkAddress, wrapperAddress)
-        Ownable(msg.sender)
+        VRFConsumerBaseV2Plus(vrfCoordinatorV2_5) // sepolia COORDINATOR地址
     {
+        s_subscriptionId = subscriptionId;
         s_tokenURIs = tokenURIs;
         i_mintFee = mintFee;
     }
 
+    modifier onlyVRFCoordinator() {
+        require(
+            msg.sender == address(s_vrfCoordinator),
+            "Only VRFCoordinator can call"
+        );
+        _;
+    }
+
     // 请求NFT
     function requestNft() public payable returns (uint256 requestId) {
+        console.log("requestNft...", msg.value);
         if (msg.value < i_mintFee) {
             revert RandomIpfsNft_NeedMoreETHSent();
         }
-        // 调用VRF请求随机数
-        requestId = requestRandomness(
-            CALLBACK_GAS_LIMIT,
-            REQUEST_CONFIRMATIONS,
-            NUM_WORDS
+
+        requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: KEY_HASH,
+                subId: s_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: CALLBACK_GAS_LIMIT,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                )
+            })
         );
+        console.log("requestId....", requestId);
         // 将请求ID与发送者关联
         s_requestIdToSender[requestId] = msg.sender;
         // 触发NFT请求事件
         emit NFTRequested(requestId, msg.sender);
+        console.log("NFTRequested event emitted.");
         return requestId;
     }
 
@@ -84,14 +101,18 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
     // 在VRF请求完成后，VRF合约会调用这个函数
     function fulfillRandomWords(
         uint256 requestId,
-        uint256[] memory randomWords
-    ) internal override {
+        uint256[] calldata randomWords
+    ) internal override onlyVRFCoordinator {
+        console.log("fulfillRandomWords....", requestId, randomWords[0]);
         // 获取NFT所有者
         address nftOwner = s_requestIdToSender[requestId];
+        console.log("nftOwner....", nftOwner);
         // 生成新的tokenID
         uint256 newTokenId = s_tokenCounter++;
+        console.log("newTokenId....", newTokenId);
         // 计算随机数
         uint256 moddedRng = randomWords[0] % MAX_CHANCE_VALUE;
+        console.log("moddedRng....", moddedRng);
         // 根据随机数获取稀有度
         Rarity rarity = getRarityFromModdedRng(moddedRng);
         // 安全铸造NFT
@@ -126,7 +147,7 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase, ERC721URIStorage, Ownable {
     }
 
     // 提款函数
-    function withdrawETH() public onlyOwner {
+    function withdrawETH() public {
         // 获取当前合约的ETH余额
         uint256 balance = address(this).balance;
         // 将ETH发送给合约所有者

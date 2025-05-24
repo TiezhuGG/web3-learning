@@ -16,9 +16,9 @@ REPORT_GAS=true pnpm hardhat test
 pnpm hardhat node
 ```
 
-### 使用hardhat-deploy插件方式进行部署：
+### 使用 hardhat-deploy 插件方式进行部署：
 
-需要在hardhat.config.js导入用到的插件
+需要在 hardhat.config.js 导入用到的插件
 
 先安装依赖：
 
@@ -27,11 +27,13 @@ pnpm add -D hardhat-deploy hardhat-deploy-ethers @nomicfoundation/hardhat-ethers
 ```
 
 部署所有合约
+
 ```shell
 pnpm hardhat deploy
 ```
 
-单独部署randomIpfsNft
+单独部署 randomIpfsNft
+
 ```shell
 pnpm hardhat deploy --tags randomIpfsNft
 ```
@@ -39,26 +41,31 @@ pnpm hardhat deploy --tags randomIpfsNft
 #### 使用 chainlink VRF V2.5 请求随机数
 
 ```solidity
-// sepolia 测试网地址
-// Address LINK
-// address public linkAddress = 0x779877A7B0D9E8603169DdbD7836e478b4624789;
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
-// address WRAPPER
-// address public wrapperAddress = 0x195f15F2d49d693cE265b4fB0fdDbE15b1850Cc1;
-contract RandomIpfsNft is VRFV2WrapperConsumerBase {
+contract RandomIpfsNft is VRFConsumerBaseV2Plus {
     constructor(
-        address linkAddress, // VRF合约地址
-        address wrapperAddress, // VRF包装器地址
+        address vrfCoordinatorV2_5, // VRF Coordinator地址
+        uint256 subscriptionId, // 订阅ID
     )
-        VRFV2WrapperConsumerBase(linkAddress,wrapperAddress)
+        VRFConsumerBaseV2Plus(vrfCoordinatorV2_5)
     {}
 
     function requestNft() public payable returns (uint256 requestId) {
-        // 调用VRF函数requestRandomness请求随机数
-        requestId = requestRandomness(
-            CALLBACK_GAS_LIMIT,
-            REQUEST_CONFIRMATIONS,
-            NUM_WORDS
+      requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: KEY_HASH,
+                subId: s_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: CALLBACK_GAS_LIMIT,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({
+                        nativePayment: false
+                    })
+                )
+            })
         );
 
         return requestId;
@@ -76,13 +83,13 @@ contract RandomIpfsNft is VRFV2WrapperConsumerBase {
 
 ```
 
-#### 上传图片和元数据到pinata
+#### 上传图片和元数据到 pinata
 
 ```shell
 pnpm add @pinata/sdk
 ```
 
-创建pinata实例，实现storeImages和storeTokenUriMetadata上传数据到pinata
+创建 pinata 实例，实现 storeImages 和 storeTokenUriMetadata 上传数据到 pinata
 
 ```js
 const pinataApiKey = process.env.PINATA_API_KEY;
