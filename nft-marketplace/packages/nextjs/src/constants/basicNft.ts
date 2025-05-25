@@ -1,4 +1,6 @@
-export const BASIC_NFT_ABI = [
+import { Abi } from "viem";
+
+export const BASIC_NFT_ABI: Abi = [
   {
     inputs: [],
     stateMutability: "nonpayable",

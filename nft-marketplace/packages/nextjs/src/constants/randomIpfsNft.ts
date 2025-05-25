@@ -1,4 +1,6 @@
-export const RANDOM_IPFS_NFT_ABI = [
+import { Abi } from "viem";
+
+export const RANDOM_IPFS_NFT_ABI: Abi = [
   {
     inputs: [
       {

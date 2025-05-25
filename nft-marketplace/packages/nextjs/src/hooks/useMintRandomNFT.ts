@@ -11,11 +11,17 @@ import {
   useReadContract,
   usePublicClient,
   useWatchContractEvent,
+  type UseReadContractParameters,
 } from "wagmi";
 import { decodeEventLog } from "viem";
 
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;
+
+const randomContractConfig: UseReadContractParameters = {
+  address: CONTRACT_ADDRESS,
+  abi: CONTRACT_ABI,
+};
 
 interface NFTRequestedEvent {
   eventName: "NFTRequested";
@@ -34,21 +40,25 @@ export function useMintRandomNFT() {
   );
   const [isMinting, setIsMinting] = useState(false);
 
-  const { data: subscriptionId } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: "s_subscriptionId",
+  const { data: mintFeeData } = useReadContract({
+    ...randomContractConfig,
+    functionName: "getMintFee",
   });
 
+  const mintFee = mintFeeData as bigint | undefined;
+
   const { data: tokenCounter, refetch: refetchTokenCounter } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
+    ...randomContractConfig,
     functionName: "getTokenCounter",
   });
 
-  const { data: tokenUris, refetch: refetchTokenUris } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
+  const { data: subscriptionId } = useReadContract({
+    ...randomContractConfig,
+    functionName: "s_subscriptionId",
+  });
+
+  const { data: tokenUris } = useReadContract({
+    ...randomContractConfig,
     functionName: "getTokenURIs",
     args: [lastMintedTokenId ?? 0n],
     query: {
@@ -57,8 +67,7 @@ export function useMintRandomNFT() {
   });
 
   const { data: balance } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
+    ...randomContractConfig,
     functionName: "balanceOf",
     args: [address!],
     query: {
@@ -66,16 +75,9 @@ export function useMintRandomNFT() {
     },
   });
 
-  const { data: mintFee } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
-    functionName: "getMintFee",
-  });
-
   // 监听 NFTMinted 事件
   useWatchContractEvent({
-    address: CONTRACT_ADDRESS,
-    abi: CONTRACT_ABI,
+    ...randomContractConfig,
     eventName: "NFTMinted",
     onLogs(log) {
       console.log("----------NFT Minted Event:", log);
@@ -106,9 +108,8 @@ export function useMintRandomNFT() {
 
     try {
       setIsMinting(true);
-      const fee = mintFee as bigint;
       console.log("Attempting to mint NFT:", {
-        fee: fee.toString(),
+        fee: mintFee.toString(),
         address,
         chainId,
         contractAddress: CONTRACT_ADDRESS,
@@ -118,9 +119,9 @@ export function useMintRandomNFT() {
       const balance = await publicClient.getBalance({ address });
       console.log("User balance:", balance.toString());
 
-      if (balance < fee) {
+      if (balance < mintFee) {
         throw new Error(
-          `Insufficient balance. You need at least ${fee.toString()} wei`
+          `Insufficient balance. You need at least ${mintFee.toString()} wei`
         );
       }
 
@@ -128,7 +129,7 @@ export function useMintRandomNFT() {
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: "requestNft",
-        value: fee,
+        value: mintFee,
       });
 
       console.log("Mint request sent, transaction hash:", hash);
@@ -259,9 +260,10 @@ export function useMintRandomNFT() {
   );
 
   return {
+    chainId,
+    mintFee,
     tokenCounter,
     balance,
-    mintFee: mintFee,
     mintNFT,
     approveMarketplace,
     isMinting,

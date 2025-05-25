@@ -1,4 +1,6 @@
-export const MOCK_VRF_ABI = [
+import { Abi } from "viem";
+
+export const MOCK_VRF_ABI: Abi = [
   {
     inputs: [
       {
@@ -1180,4 +1182,5 @@ export const MOCK_VRF_ABI = [
   },
 ];
 
-export const MOCK_VRF_CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+export const MOCK_VRF_CONTRACT_ADDRESS =
+  "0x5FbDB2315678afecb367f032d93F642f64180aa3";
