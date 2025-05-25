@@ -25,11 +25,19 @@ const metadataTemplate = {
   ],
 };
 
+// 宝可梦
 let tokenUris = [
-  "ipfs://QmZYmH5iDbD6v3U2ixoVAjioSzvWJszDzYdbeCLquGSpVm",
-  "ipfs://QmYQC5aGZu2PTH8XzbJrbDnvhj3gVs7ya33H9mqUNvST3d",
-  "ipfs://QmaVkBn2tKmjbhphU7eyztbvSQU5EXDdqRyXZtRhSGgJGo",
+  "ipfs://QmcGDUXKftz4T4nSboPAjL1dHGbnx6mTpqT8WwENEJiA4g",
+  "ipfs://Qmb1wFGeRiZUY72JQZ7hkrJkPZW8BB1MquE8rCcBS1CaE5",
+  "ipfs://QmeeyNzTLaPqdioNT33abDar3vNuHRLYHUSe3HaUVDpV9Q",
 ];
+
+// 狗狗
+// let tokenUris = [
+//   "ipfs://QmZYmH5iDbD6v3U2ixoVAjioSzvWJszDzYdbeCLquGSpVm",
+//   "ipfs://QmYQC5aGZu2PTH8XzbJrbDnvhj3gVs7ya33H9mqUNvST3d",
+//   "ipfs://QmaVkBn2tKmjbhphU7eyztbvSQU5EXDdqRyXZtRhSGgJGo",
+// ];
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
   const { deploy, log } = deployments;

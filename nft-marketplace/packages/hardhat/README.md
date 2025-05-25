@@ -62,7 +62,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus {
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
                     VRFV2PlusClient.ExtraArgsV1({
-                        nativePayment: false
+                        nativePayment: false  // 是否使用原生支付(ETH) 非原生支付是LINK
                     })
                 )
             })
@@ -81,6 +81,56 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus {
     }
 }
 
+```
+
+使用 chainlink VRF V2.5 Mock 本地测试请求随机数：
+
+```js
+const FUND_AMOUNT = "1000"; // 1000 LINK (本地测试记得输入大一点防止gas不够revert)
+
+// 本地链（chainId === 31337）上，使用mock合约
+if (chainId == 31337) {
+  const vrfCoordinatorDeployment = await deployments.get(
+    "VRFCoordinatorV2_5Mock"
+  );
+  const signer = await ethers.getSigner(deployer);
+  // 获取mock合约实例
+  vrfCoordinatorV2_5Mock = await ethers.getContractAt(
+    "VRFCoordinatorV2_5Mock",
+    vrfCoordinatorDeployment.address,
+    signer
+  );
+  // mock合约地址
+  vrfCoordinatorV2_5Address = vrfCoordinatorV2_5Mock.target;
+
+  const txResponse = await vrfCoordinatorV2_5Mock.createSubscription();
+  const txReceipt = await txResponse.wait(1);
+  const event = txReceipt.logs
+    .map((log) => {
+      try {
+        return vrfCoordinatorV2_5Mock.interface.parseLog(log);
+      } catch (e) {
+        return null;
+      }
+    })
+    .find((e) => e?.name === "SubscriptionCreated");
+  // 获取订阅ID
+  subscriptionId = event.args.subId;
+  await vrfCoordinatorV2_5Mock.fundSubscription(subscriptionId, FUND_AMOUNT);
+}
+
+// 最后记得添加消费者(此处是 randomIpfsNft 合约)
+if (chainId == 31337) {
+  await vrfCoordinatorV2_5Mock.addConsumer(
+    subscriptionId,
+    randomIpfsNft.address
+  );
+  log("Adding consumer to VRF subscription...");
+
+  // 验证消费者是否添加成功
+  const subInfo = await vrfCoordinatorV2_5Mock.getSubscription(subscriptionId);
+  console.log("Subscription consumers:", subInfo.consumers);
+}
 ```
 
 #### 上传图片和元数据到 pinata
