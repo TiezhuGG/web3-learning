@@ -1,27 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useAccount } from "wagmi";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
 import { useMarketplace } from "@/hooks/useMarketplace";
-import { formatAddress, formatEther } from "@/lib/utils";
-import { NFTDisplay } from "@/components/NFTDisplay";
-import ConnectWallet from "@/components/ConnectWallet";
 import { NftMinting } from "@/components/NftMinting";
 import { NftGallery } from "@/components/NftGallery";
 import { NftMarketplace } from "@/components/NftMarketplace";
+import WalletConnect from "@/components/wallet/WalletConnect";
+import { useWallet } from "@/hooks/useWallet";
 
 export default function Home() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useWallet();
   const { tokenCounter, balance, mintNFT, mintFee } = useMintRandomNFT();
   const {
     proceeds,
@@ -32,8 +21,6 @@ export default function Home() {
     cancelListing,
     withdrawProceeds,
   } = useMarketplace();
-
-  console.log("isConnected:", isConnected);
 
   const handleMint = async () => {
     try {
@@ -85,7 +72,7 @@ export default function Home() {
     <div className="min-h-screen bg-dark-bg text-gray-200">
       <header className="py-6 px-8 flex justify-between items-center bg-gray-800 shadow-lg">
         <h1 className="text-3xl font-bold text-white">Random NFT Market</h1>
-        <ConnectWallet />
+        <WalletConnect />
       </header>
 
       <main className="container mx-auto px-4 py-8">
@@ -120,7 +107,7 @@ export default function Home() {
             <p className="text-xl text-gray-400 mb-6">
               Connect your wallet to explore the NFT market.
             </p>
-            <ConnectWallet /> {/* 再次显示连接按钮，更友好 */}
+            {/* <ConnectWallet />  */}
           </div>
         )}
       </main>

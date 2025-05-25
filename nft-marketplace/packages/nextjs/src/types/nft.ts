@@ -12,3 +12,13 @@ export interface UserNft {
   loadingMetadata: boolean;
   errorLoadingMetadata: boolean;
 }
+
+export interface NFTRequestedEvent {
+  eventName: "NFTRequested";
+  args: {
+    requestId: bigint;
+    requester: string;
+  };
+}
+
+export type BigintType = bigint | undefined;

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
@@ -12,8 +14,12 @@ import {
   usePublicClient,
   useWatchContractEvent,
   type UseReadContractParameters,
+  useSimulateContract,
 } from "wagmi";
-import { decodeEventLog } from "viem";
+import { decodeEventLog, formatEther, parseEther } from "viem";
+import { WriteContractParameters } from "wagmi/actions";
+import { NFTRequestedEvent, BigintType } from "@/types";
+import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
 
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;
@@ -23,13 +29,11 @@ const randomContractConfig: UseReadContractParameters = {
   abi: CONTRACT_ABI,
 };
 
-interface NFTRequestedEvent {
-  eventName: "NFTRequested";
-  args: {
-    requestId: bigint;
-    requester: string;
-  };
-}
+const randomWriteContractConfig: WriteContractParameters = {
+  address: CONTRACT_ADDRESS,
+  abi: CONTRACT_ABI,
+  functionName: "",
+};
 
 export function useMintRandomNFT() {
   const { address, chainId } = useAccount();
@@ -45,7 +49,7 @@ export function useMintRandomNFT() {
     functionName: "getMintFee",
   });
 
-  const mintFee = mintFeeData as bigint | undefined;
+  const mintFee = mintFeeData as BigintType;
 
   const { data: tokenCounter, refetch: refetchTokenCounter } = useReadContract({
     ...randomContractConfig,
@@ -57,15 +61,6 @@ export function useMintRandomNFT() {
     functionName: "s_subscriptionId",
   });
 
-  const { data: tokenUris } = useReadContract({
-    ...randomContractConfig,
-    functionName: "getTokenURIs",
-    args: [lastMintedTokenId ?? 0n],
-    query: {
-      enabled: lastMintedTokenId !== null,
-    },
-  });
-
   const { data: balance } = useReadContract({
     ...randomContractConfig,
     functionName: "balanceOf",
@@ -75,17 +70,62 @@ export function useMintRandomNFT() {
     },
   });
 
-  // 监听 NFTMinted 事件
-  useWatchContractEvent({
-    ...randomContractConfig,
-    eventName: "NFTMinted",
-    onLogs(log) {
-      console.log("----------NFT Minted Event:", log);
-      // 刷新 tokenCounter
-      refetchTokenCounter();
-      setIsMinting(false);
-    },
+  const {
+    getRequestIdBySimulate,
+    getRequestIdByDecodeLog,
+    requestFulfillRandomWords,
+  } = useChainlinkVRF2_5Mock({
+    mintFee,
   });
+
+  const handleMint = useCallback(async () => {
+    try {
+      // 检查用户余额
+      const balance = await publicClient?.getBalance({ address: address! });
+      if (balance! < mintFee!) {
+        throw new Error(
+          `Insufficient balance. You need at least ${formatEther(
+            mintFee!
+          )} ETH.`
+        );
+      }
+
+      console.log("铸造代币中", balance);
+
+      if (chainId == 31337) {
+        setIsMinting(true);
+        const requestId = await getRequestIdBySimulate();
+        const result = await requestFulfillRandomWords(requestId!);
+        if (result) {
+          setIsMinting(false);
+        }
+      }
+    } catch (error) {
+      setIsMinting(false);
+      throw new Error("Failed to mint NFT");
+    }
+  }, [address, chainId, tokenCounter]);
+
+  // const { data: tokenUris } = useReadContract({
+  //   ...randomContractConfig,
+  //   functionName: "getTokenURIs",
+  //   args: [lastMintedTokenId ?? 0n],
+  //   query: {
+  //     enabled: lastMintedTokenId !== null,
+  //   },
+  // });
+
+  // 监听 NFTMinted 事件
+  // useWatchContractEvent({
+  //   ...randomContractConfig,
+  //   eventName: "NFTMinted",
+  //   onLogs(log) {
+  //     console.log("----------NFT Minted Event:", log);
+  //     // 刷新 tokenCounter
+  //     refetchTokenCounter();
+  //     setIsMinting(false);
+  //   },
+  // });
 
   // console.log("Contract state:", {
   //   address,
@@ -268,6 +308,6 @@ export function useMintRandomNFT() {
     approveMarketplace,
     isMinting,
     lastMintedTokenId,
-    tokenUris,
+    handleMint,
   };
 }

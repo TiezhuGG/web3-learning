@@ -1,4 +1,4 @@
-import { Abi } from "viem";
+import { Abi, Address } from "viem";
 
 export const RANDOM_IPFS_NFT_ABI: Abi = [
   {
@@ -827,5 +827,5 @@ export const RANDOM_IPFS_NFT_ABI: Abi = [
   },
 ];
 
-export const RANDOM_IPFS_NFT_CONTRACT_ADDRESS =
+export const RANDOM_IPFS_NFT_CONTRACT_ADDRESS: Address =
   "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
