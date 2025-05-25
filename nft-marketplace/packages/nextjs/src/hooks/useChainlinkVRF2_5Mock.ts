@@ -89,7 +89,6 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
         hash,
       });
 
-      console.log("fulfillRandomWords success", receipt);
       if (receipt?.status === "success") {
         return true;
       }

@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -13,6 +14,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Providers>{children}</Providers>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

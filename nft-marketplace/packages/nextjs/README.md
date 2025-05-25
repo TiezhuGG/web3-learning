@@ -1,40 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
-## Getting Started
-
-First, run the development server:
+## 开始
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+git clone...
+cd...
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 模拟使用 Chainlnk VRF V2.5 请求随机数
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### 需要主动获取并传递 requestId 到 Mock 合约的 fulfillRandomWords 函数中
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```js
+const requestNftAddress = "requestNft函数所在合约地址"
+const requestNftAbi = "requestNft函数所在合约地址abi"
+const address = "调用requestNft函数的地址"
+const mintFee = "铸造费用"
+const publicClient = usePublicClient();
+const { writeContractAsync } = useContractWrite();
 
-## Learn More
+interface NFTRequestedEvent {
+  eventName: "NFTRequested";
+  args: {
+    requestId: bigint;
+    requester: string;
+  };
+}
 
-To learn more about Next.js, take a look at the following resources:
+// 若requestNft函数明确返回了requestId，可以使用useSimulateContract模拟获取
+const getRequestIdBySimulate = async () => {
+const requestNftData = await publicClient?.simulateContract({
+    address: requestNftAddress,
+    abi: requestNftAbi,
+    functionName: "requestNft",
+    account: address,
+    value: mintFee,
+});
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+// 需要调用requestNft检查是否需要授权
+await writeContractAsync(requestNftData?.request!);
+return requestNftData?.result;
+}
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### 如果没有返回 requestId 则需解码事件日志
 
-## Deploy on Vercel
+```js
+const getRequestIdByDecodeLog = async () => {
+const hash = await writeContractAsync({
+    address: requestNftAddress,
+    abi: requestNftAbi,
+    functionName: "requestNft",
+    value: mintFee,
+});
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+const receipt = await publicClient?.waitForTransactionReceipt({
+    hash,
+});
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+const requestNftLog = receipt?.logs.find((log) => {
+    try {
+    const result = decodeEventLog({
+        abi: requestNftAbi,
+        data: log.data,
+        topics: log.topics,
+    });
+    return result.eventName === "NFTRequested";
+    } catch (error) {
+    return false;
+    }
+});
 
+if (!requestNftLog) {
+    throw new Error("No requestNftLog found");
+}
 
+const decodedLog = decodeEventLog({
+    abi: requestNftAbi,
+    data: requestNftLog.data,
+    topics: requestNftLog.topics,
+}) as unknown as NFTRequestedEvent;
 
-### 流程
+const { requestId } = decodedLog.args;
+
+return requestId;
+}
+```
+
+#### 最后需要调用 Mock 合约中的 fulfillRandomWords 函数
+
+```js
+const requestFulfillRandomWords = async (requestId: bigint) => {
+  const hash = await writeContractAsync({
+    address: MOCK_VRF_CONTRACT_ADDRESS,
+    abi: MOCK_VRF_ABI,
+    functionName: "fulfillRandomWords",
+    args: [requestId, RANDOM_IPFS_NFT_CONTRACT_ADDRESS],
+  });
+
+  const receipt = await publicClient?.waitForTransactionReceipt({
+    hash,
+  });
+
+  console.log("fulfillRandomWords success", receipt);
+  if (receipt?.status === "success") {
+    return true;
+  }
+};
+```
+
+#### 本地链：chainId为31337时，调用模拟函数获取requestId并调用 fulfillRandomWords 函数
+
+```js
+if (chainId == 31337) {
+    const requestId = await getRequestIdBySimulate();
+    const result = await requestFulfillRandomWords(requestId!);
+    ...
+}
+```
