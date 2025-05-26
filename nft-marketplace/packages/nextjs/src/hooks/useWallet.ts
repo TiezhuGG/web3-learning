@@ -15,6 +15,7 @@ interface WalletProps {
   chain: ChainType | undefined;
   isConnected: boolean;
   balanceData: BalanceDataProps | undefined;
+  refetchBalance: () => void;
   isConnecting: boolean;
   connectors: readonly Connector<CreateConnectorFn>[];
   connect: (args: { connector: Connector }) => void;
@@ -26,11 +27,16 @@ interface WalletProps {
 
 export const useWallet = (): WalletProps => {
   const { address, chain, isConnected } = useAccount();
-  const { data: balanceData } = useBalance({ address });
+  const { data: balanceData, refetch: refetchBalance } = useBalance({
+    address,
+    query: {
+      staleTime: 0,
+      gcTime: 0,
+    },
+  });
   const { connect, connectors, isPending: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
   const { chains, switchChainAsync, isPending: isSwitching } = useSwitchChain();
-
   const currentChain = chain
     ? { ...chain, icon: networks.find((n) => n.id === chain.id)?.icon }
     : undefined;
@@ -45,6 +51,7 @@ export const useWallet = (): WalletProps => {
     chain: currentChain,
     isConnected,
     balanceData,
+    refetchBalance,
     connect,
     connectors,
     isConnecting,

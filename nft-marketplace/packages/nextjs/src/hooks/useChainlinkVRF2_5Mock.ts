@@ -5,8 +5,7 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { usePublicClient, useWriteContract } from "wagmi";
-import { useWallet } from "./useWallet";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { BigintType, NFTRequestedEvent } from "@/types";
 import { useCallback } from "react";
 
@@ -15,7 +14,7 @@ import { useCallback } from "react";
  * 需要主动获取并传递 requestId 到 Mock合约的 fulfillRandomWords 函数中
  */
 export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
-  const { address } = useWallet();
+  const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
 

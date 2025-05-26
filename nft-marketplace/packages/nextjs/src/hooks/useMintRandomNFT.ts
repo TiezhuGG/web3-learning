@@ -14,6 +14,7 @@ import { formatEther } from "viem";
 import { BigintType } from "@/types";
 import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
 import { toast } from "sonner";
+import { useWallet } from "./useWallet";
 
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;
@@ -24,6 +25,7 @@ export const randomContractConfig: UseReadContractParameters = {
 };
 
 export function useMintRandomNFT() {
+  const { refetchBalance } = useWallet();
   const { address, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
@@ -47,12 +49,7 @@ export function useMintRandomNFT() {
 
   const tokenCounter = tokenCounterData as BigintType;
 
-  const { data: subscriptionId } = useReadContract({
-    ...randomContractConfig,
-    functionName: "s_subscriptionId",
-  });
-
-  const { data: balance } = useReadContract({
+  const { data: myNFTCount } = useReadContract({
     ...randomContractConfig,
     functionName: "balanceOf",
     args: [address!],
@@ -88,6 +85,7 @@ export function useMintRandomNFT() {
         const requestId = await getRequestIdBySimulate();
         const result = await requestFulfillRandomWords(requestId!);
         if (result) {
+          refetchBalance();
           setIsMinting(false);
           const { data: newTokenCounter } = await refetchTokenCounter();
           setLastMintedTokenId(
@@ -108,6 +106,7 @@ export function useMintRandomNFT() {
 
       const receipt = await publicClient?.waitForTransactionReceipt({ hash });
       if (receipt?.status === "success") {
+        refetchBalance();
         setIsMinting(false);
         toast.success("Mint NFT successfully.");
       }
@@ -137,7 +136,7 @@ export function useMintRandomNFT() {
     chainId,
     mintFee,
     tokenCounter,
-    balance,
+    myNFTCount,
     isMinting,
     lastMintedTokenId,
     handleMintNFT,
