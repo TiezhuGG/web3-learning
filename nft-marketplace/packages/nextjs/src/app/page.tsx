@@ -12,66 +12,67 @@ import { useWallet } from "@/hooks/useWallet";
 export default function Home() {
   const { isConnected } = useWallet();
   const { tokenCounter, balance, handleMintNFT, mintFee } = useMintRandomNFT();
-  const {
-    proceeds,
-    listing,
-    refetchListing,
-    listNFT,
-    buyNFT,
-    cancelListing,
-    withdrawProceeds,
-  } = useMarketplace();
+  
+  // const {
+  //   proceeds,
+  //   listing,
+  //   refetchListing,
+  //   listNFT,
+  //   buyNFT,
+  //   cancelListing,
+  //   withdrawProceeds,
+  // } = useMarketplace();
 
-  const handleMint = async () => {
-    try {
-      const hash = await handleMintNFT();
-      console.log("==========Mint transaction:", hash);
-    } catch (error) {
-      console.error("Failed to mint:", error);
-    }
-  };
+  // const handleMint = async () => {
+  //   try {
+  //     const hash = await handleMintNFT();
+  //     console.log("==========Mint transaction:", hash);
+  //   } catch (error) {
+  //     console.error("Failed to mint:", error);
+  //   }
+  // };
 
-  const handleList = async () => {
-    try {
-      const tokenId = 0n;
-      const price = BigInt(1e16); // 0.01 ETH
-      // await approveMarketplace(tokenId, "YOUR_MARKETPLACE_ADDRESS");
-      const hash = await listNFT(tokenId, price);
-      console.log("List transaction:", hash);
-    } catch (error) {
-      console.error("Failed to list:", error);
-    }
-  };
+  // const handleList = async () => {
+  //   try {
+  //     const tokenId = 0n;
+  //     const price = BigInt(1e16); // 0.01 ETH
+  //     // await approveMarketplace(tokenId, "YOUR_MARKETPLACE_ADDRESS");
+  //     const hash = await listNFT(tokenId, price);
+  //     console.log("List transaction:", hash);
+  //   } catch (error) {
+  //     console.error("Failed to list:", error);
+  //   }
+  // };
 
-  const handleBuy = async () => {
-    try {
-      const tokenId = 0n;
-      const hash = await buyNFT(tokenId, listing?.price || 0n);
-      console.log("Buy transaction:", hash);
-    } catch (error) {
-      console.error("Failed to buy:", error);
-    }
-  };
+  // const handleBuy = async () => {
+  //   try {
+  //     const tokenId = 0n;
+  //     const hash = await buyNFT(tokenId, listing?.price || 0n);
+  //     console.log("Buy transaction:", hash);
+  //   } catch (error) {
+  //     console.error("Failed to buy:", error);
+  //   }
+  // };
 
-  const handleWithdraw = async () => {
-    try {
-      const hash = await withdrawProceeds();
-      console.log("Withdraw transaction:", hash);
-    } catch (error) {
-      console.error("Failed to withdraw:", error);
-    }
-  };
+  // const handleWithdraw = async () => {
+  //   try {
+  //     const hash = await withdrawProceeds();
+  //     console.log("Withdraw transaction:", hash);
+  //   } catch (error) {
+  //     console.error("Failed to withdraw:", error);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (isConnected) {
-      refetchListing();
-    }
-  }, [isConnected, refetchListing]);
+  // useEffect(() => {
+  //   if (isConnected) {
+  //     refetchListing();
+  //   }
+  // }, [isConnected, refetchListing]);
 
   return (
     <div className="min-h-screen bg-dark-bg">
       <header className="py-6 px-8 flex justify-between items-center bg-gray-800 shadow-lg">
-        <h1 className="text-3xl font-bold text-white">Random NFT Market</h1>
+        <h1 className="text-3xl font-bold text-white">NFT Market</h1>
         <WalletConnect />
       </header>
 
@@ -81,7 +82,7 @@ export default function Home() {
             {/* Minting Section */}
             <section className="rounded-lg shadow-xl p-8 border">
               <h2 className="text-2xl font-semibold mb-6">
-                Mint Your Random NFT
+                Mint Your NFT
               </h2>
               <NftMinting />
             </section>

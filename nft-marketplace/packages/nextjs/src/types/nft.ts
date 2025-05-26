@@ -9,8 +9,8 @@ export interface UserNft {
   tokenId: bigint;
   tokenUri: string;
   metadata: NftMetadata | null;
-  loadingMetadata: boolean;
-  errorLoadingMetadata: boolean;
+  loadingMetadata?: boolean;
+  errorLoadingMetadata?: boolean;
 }
 
 export interface NFTRequestedEvent {

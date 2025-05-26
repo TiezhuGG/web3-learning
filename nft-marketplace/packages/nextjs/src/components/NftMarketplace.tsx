@@ -238,7 +238,7 @@ export function NftMarketplace() {
           account: accountAddress,
           address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
           abi: RANDOM_IPFS_NFT_ABI,
-          functionName: "approve",
+          functionName: "approve",  // 上架NFT之前需要先授权（调用NFT合约的approve，这是ERC721标准的要求）
           args: [NFT_MARKETPLACE_CONTRACT_ADDRESS, tokenIdBigInt],
         });
         await writeApprove(request);

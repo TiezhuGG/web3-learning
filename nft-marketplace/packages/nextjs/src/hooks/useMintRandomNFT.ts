@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;
 
-const randomContractConfig: UseReadContractParameters = {
+export const randomContractConfig: UseReadContractParameters = {
   address: CONTRACT_ADDRESS,
   abi: CONTRACT_ABI,
 };
@@ -39,10 +39,13 @@ export function useMintRandomNFT() {
 
   const mintFee = mintFeeData as BigintType;
 
-  const { data: tokenCounter, refetch: refetchTokenCounter } = useReadContract({
-    ...randomContractConfig,
-    functionName: "getTokenCounter",
-  });
+  const { data: tokenCounterData, refetch: refetchTokenCounter } =
+    useReadContract({
+      ...randomContractConfig,
+      functionName: "getTokenCounter",
+    });
+
+  const tokenCounter = tokenCounterData as BigintType;
 
   const { data: subscriptionId } = useReadContract({
     ...randomContractConfig,
@@ -77,7 +80,7 @@ export function useMintRandomNFT() {
           )} ETH.`
         );
       }
-      
+
       // 本地链模拟Chainlink VRF
       if (chainId == 31337) {
         setIsMinting(true);

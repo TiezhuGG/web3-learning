@@ -19,6 +19,11 @@ export const NFT_MARKETPLACE_NFT_ABI: Abi = [
   },
   {
     inputs: [],
+    name: "IsOwner",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "NoProceeds",
     type: "error",
   },
@@ -307,5 +312,5 @@ export const NFT_MARKETPLACE_NFT_ABI: Abi = [
   },
 ];
 
-export const NFT_MARKETPLACE_CONTRACT_ADDRESS:Address =
+export const NFT_MARKETPLACE_CONTRACT_ADDRESS: Address =
   "0x0165878A594ca255338adfa4d48449f69242Eb8F";

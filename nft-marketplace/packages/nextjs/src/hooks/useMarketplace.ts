@@ -1,29 +1,107 @@
-import { NFT_MARKETPLACE_NFT_ABI, NFT_MARKETPLACE_CONTRACT_ADDRESS } from './../constants/nftMarketplace';
-import { useCallback } from "react";
-import { parseEther } from "viem";
+import { publicClient } from "@/lib/wagmi";
+import {
+  NFT_MARKETPLACE_NFT_ABI,
+  NFT_MARKETPLACE_CONTRACT_ADDRESS,
+} from "@/constants/nftMarketplace";
+import { useCallback, useEffect, useState } from "react";
+import { Address, parseEther } from "viem";
 import {
   useAccount,
   useWriteContract,
   useReadContract,
   useWaitForTransactionReceipt,
+  UseReadContractParameters,
+  usePublicClient,
 } from "wagmi";
+import { randomContractConfig, useMintRandomNFT } from "./useMintRandomNFT";
+import {
+  RANDOM_IPFS_NFT_ABI,
+  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+} from "@/constants";
+import { NftMetadata } from "@/types";
 
-// 这里需要替换为实际部署后的合约地址
-const NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const CONTRACT_ADDRESS = NFT_MARKETPLACE_CONTRACT_ADDRESS;
+const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
 
+const marketContractConfig: UseReadContractParameters = {
+  address: CONTRACT_ADDRESS,
+  abi: CONTRACT_ABI,
+};
 
 export interface Listing {
   price: bigint;
   seller: string;
 }
 
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATWAY_PINATE_CLOUD_IPFS;
+
 export function useMarketplace() {
   const { address } = useAccount();
+  const { tokenCounter } = useMintRandomNFT();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [userNFTs, setUserNFTs] = useState<NftMetadata[]>([]);
+
+  const getTokenUri = async (tokenId: bigint) => {
+    // 获取tokenURI
+    const tokenURi = (await publicClient?.readContract({
+      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+      abi: RANDOM_IPFS_NFT_ABI,
+      functionName: "tokenURI",
+      args: [tokenId],
+    })) as string;
+
+    // 获取owner地址
+    const ownerAddress = (await publicClient?.readContract({
+      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+      abi: RANDOM_IPFS_NFT_ABI,
+      functionName: "ownerOf",
+      args: [tokenId],
+    })) as Address;
+
+    // 判断是否为NFT所有者
+    if (address?.toLowerCase() === ownerAddress?.toLowerCase()) {
+      return tokenURi;
+    }
+  };
+
+  // 从IPFS获取NFT元数据信息
+  const fetchNFTMetadata = async (tokenUri: string) => {
+    if (tokenUri.startsWith("ipfs://")) {
+      const ipfsHash = tokenUri.replace("ipfs://", "");
+      const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
+      const response = await fetch(gatewayUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch metadata");
+      }
+      const metadata: NftMetadata = await response.json();
+      return metadata;
+    } else {
+      throw new Error("Not IPFS");
+    }
+  };
+
+  useEffect(() => {
+    console.log("Marketplace contract config:", marketContractConfig);
+
+    const metadataPromises: Promise<NftMetadata>[] = [];
+    const loadNFTs = async () => {
+      for (let i = 0n; i < tokenCounter!; i++) {
+        const tokenUri = await getTokenUri(i);
+        console.log(`Listing for token ID ${i}: ${tokenUri}`, );
+        if (!tokenUri) continue;
+        metadataPromises.push(fetchNFTMetadata(tokenUri));
+      }
+
+      const results = await Promise.all(metadataPromises);
+      console.log(results);
+    };
+    loadNFTs();
+    console.log("Marketplace contract loaded");
+  }, [address, tokenCounter]);
 
   const { data: proceeds } = useReadContract({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
+    ...marketContractConfig,
     functionName: "getProceeds",
     args: [address!],
     query: {
@@ -32,10 +110,9 @@ export function useMarketplace() {
   });
 
   const { data: listing, refetch: refetchListing } = useReadContract({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
+    ...marketContractConfig,
     functionName: "getListing",
-    args: [NFT_ADDRESS, 0n],
+    args: [CONTRACT_ADDRESS, 0n],
   });
 
   const listNFT = useCallback(
@@ -46,7 +123,7 @@ export function useMarketplace() {
         address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
         abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "listItem",
-        args: [NFT_ADDRESS, tokenId, price],
+        args: [CONTRACT_ADDRESS, tokenId, price],
       });
 
       return hash;
@@ -62,7 +139,7 @@ export function useMarketplace() {
         address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
         abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "buyItem",
-        args: [NFT_ADDRESS, tokenId],
+        args: [CONTRACT_ADDRESS, tokenId],
         value: price,
       });
 
@@ -79,7 +156,7 @@ export function useMarketplace() {
         address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
         abi: NFT_MARKETPLACE_NFT_ABI,
         functionName: "cancelListing",
-        args: [NFT_ADDRESS, tokenId],
+        args: [CONTRACT_ADDRESS, tokenId],
       });
 
       return hash;

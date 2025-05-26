@@ -1,174 +1,18 @@
-"use client";
-
-import React, { useEffect, useState } from "react";
-import { useAccount, useReadContract, useWatchContractEvent } from "wagmi";
-import { NftMetadata, UserNft } from "@/types";
-import {
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-} from "@/constants";
-import { JsonRpcProvider, ethers } from "ethers"; // 用于获取 NFT 所有者
 import NftCard from "@/components/NftCard";
+import { useGallery } from "@/hooks/useGallery";
 
 export function NftGallery() {
-  const { address: accountAddress } = useAccount();
-  const [userNfts, setUserNfts] = useState<UserNft[]>([]);
-  const [isLoadingGallery, setIsLoadingGallery] = useState(false);
-
-  // 获取总铸造数量
-  const { data: tokenCounterData, refetch: refetchTokenCounter } =
-    useReadContract({
-      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      abi: RANDOM_IPFS_NFT_ABI,
-      functionName: "getTokenCounter",
-      query: {
-        enabled: !!RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      },
-    });
-  const tokenCounter = tokenCounterData as bigint | undefined;
-
-  const fetchNftDetails = async (id: bigint) => {
-    let tokenUri = "";
-    let metadata: NftMetadata | null = null;
-    let loadingMetadata = true;
-    let errorLoadingMetadata = false;
-
-    try {
-      // 获取 token URI
-      const provider = new JsonRpcProvider("http://127.0.0.1:8545"); // 或您 wagmi 配置中的 publicClient
-      const nftContract = new ethers.Contract(
-        RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        RANDOM_IPFS_NFT_ABI,
-        provider
-      );
-      tokenUri = await nftContract.tokenURI(id);
-
-      //   const { data } = await useReadContract({
-      //     address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      //     abi: RANDOM_IPFS_NFT_ABI,
-      //     functionName: "getTokenURIs",
-      //   });
-
-      //   console.log('getTokenURI', data)
-
-      // 从 IPFS 获取元数据
-      if (tokenUri.startsWith("ipfs://")) {
-        const ipfsHash = tokenUri.replace("ipfs://", "");
-        // const gatewayUrl = `https://ipfs.io/ipfs/${ipfsHash}`; // 使用公共 IPFS 网关
-        // 或者使用 Pinata 网关：`https://gateway.pinata.cloud/ipfs/${ipfsHash}`
-        const gatewayUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-        const response = await fetch(gatewayUrl);
-        if (!response.ok) throw new Error("Failed to fetch metadata");
-        metadata = await response.json();
-      } else {
-        // 如果不是 IPFS URI，可能是其他 HTTP URL
-        const response = await fetch(tokenUri);
-        if (!response.ok) throw new Error("Failed to fetch metadata");
-        metadata = await response.json();
-      }
-    } catch (error) {
-      console.error(`Error fetching NFT details for token ID ${id}:`, error);
-      errorLoadingMetadata = true;
-    } finally {
-      loadingMetadata = false;
-    }
-
-    return {
-      tokenId: id,
-      tokenUri,
-      metadata,
-      loadingMetadata,
-      errorLoadingMetadata,
-    };
-  };
-
-  useEffect(() => {
-    const loadUserNfts = async () => {
-      if (
-        !accountAddress ||
-        typeof tokenCounter === "undefined" ||
-        !RANDOM_IPFS_NFT_CONTRACT_ADDRESS
-      )
-        return;
-
-      setIsLoadingGallery(true);
-      const tempNfts: UserNft[] = [];
-      const provider = new JsonRpcProvider("http://127.0.0.1:8545"); // 确保这里的 RPC URL 正确
-      const nftContract = new ethers.Contract(
-        RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        RANDOM_IPFS_NFT_ABI,
-        provider
-      );
-
-      const fetchPromises = [];
-
-      for (let i = 0n; i < tokenCounter; i++) {
-        fetchPromises.push(
-          (async () => {
-            try {
-              const owner = await nftContract.ownerOf(i);
-              if (owner.toLowerCase() === accountAddress.toLowerCase()) {
-                return await fetchNftDetails(i);
-              }
-            } catch (e) {
-              console.warn(
-                `Could not get owner or details for token ID ${i}:`,
-                e
-              );
-            }
-            return null;
-          })()
-        );
-      }
-      const results = await Promise.all(fetchPromises);
-      setUserNfts(results.filter((nft) => nft !== null) as UserNft[]);
-      // setUserNfts(tempNfts);
-      setIsLoadingGallery(false);
-    };
-
-    loadUserNfts();
-  }, [accountAddress, tokenCounter, RANDOM_IPFS_NFT_CONTRACT_ADDRESS]); // 依赖项中添加 RANDOM_IPFS_NFT_CONTRACT_ADDRESS
-
-  // 刷新铸造数量和 NFT 列表 (例如在 NFTMinted 事件后)
-  // useWatchContractEvent({
-  //   address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-  //   abi: RANDOM_IPFS_NFT_ABI,
-  //   eventName: "NFTMinted",
-  //   onLogs: () => {
-  //     refetchTokenCounter(); // 铸造新 NFT 后刷新总数
-  //     // 重新加载用户 NFT 列表
-  //     // 也可以只更新新铸造的 NFT 到列表中，但简单起见，这里重载全部
-  //     // 或者在 NftMinting 组件中，当 NFTMinted 触发后，将 tokenId 传递给 NftGallery
-  //     const loadNewNft = async () => {
-  //       if (!accountAddress) return;
-  //       const latestTokenId = tokenCounter || 0n; // 假设新铸造的 tokenId 就是当前的 tokenCounter
-  //       const newNft = await fetchNftDetails(latestTokenId);
-  //       setUserNfts((prev) => [...prev, newNft]);
-  //     };
-  //     loadNewNft();
-  //   },
-  // });
-
-  useWatchContractEvent({
-    address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-    abi: RANDOM_IPFS_NFT_ABI,
-    eventName: "NFTMinted",
-    onLogs: () => {
-      refetchTokenCounter(); // 刷新总数，这将触发 useEffect 重新加载
-    },
-  });
+  const { userNFTs } = useGallery();
 
   return (
     <div className="p-6 bg-card-bg rounded-lg shadow-xl border">
-      {isLoadingGallery ? (
-        <p className="text-center text-gray-400">Loading your NFTs...</p>
-      ) : userNfts.length === 0 ? (
+      {userNFTs.length === 0 ? (
         <p className="text-center text-gray-400">
           You don't own any NFTs yet. Mint one!
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {userNfts.map((nft) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {userNFTs.map((nft) => (
             <NftCard key={nft.tokenId.toString()} nft={nft} />
           ))}
         </div>
