@@ -1,10 +1,6 @@
-import {
-  NFT_MARKETPLACE_NFT_ABI,
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
-} from "@/constants/nftMarketplace";
 import { useEffect, useState } from "react";
 import { Address } from "viem";
-import { useAccount, UseReadContractParameters, usePublicClient } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { useMintRandomNFT } from "./useMintRandomNFT";
 import {
   RANDOM_IPFS_NFT_ABI,
@@ -12,25 +8,13 @@ import {
 } from "@/constants";
 import { NftMetadata, UserNft } from "@/types";
 
-const CONTRACT_ADDRESS = NFT_MARKETPLACE_CONTRACT_ADDRESS;
-const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
-
-const marketContractConfig: UseReadContractParameters = {
-  address: CONTRACT_ADDRESS,
-  abi: CONTRACT_ABI,
-};
-
-export interface Listing {
-  price: bigint;
-  seller: string;
-}
-
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATWAY_PINATE_CLOUD_IPFS;
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
 
 export function useGallery() {
   const { address } = useAccount();
   const { tokenCounter } = useMintRandomNFT();
   const publicClient = usePublicClient();
+
   const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
 
   const getTokenUri = async (tokenId: bigint) => {
@@ -74,20 +58,23 @@ export function useGallery() {
         tokenUri,
         metadata,
       };
-    } else {
-      throw new Error("Not IPFS");
     }
+    
+    return null;
   };
 
   const loadNFTs = async () => {
-    const metadataPromises: Promise<UserNft>[] = [];
+    const metadataPromises: Promise<UserNft | null>[] = [];
 
     for (let i = 0n; i < tokenCounter!; i++) {
       metadataPromises.push(fetchNFTMetadata(i));
     }
 
     const results = await Promise.all(metadataPromises);
-    setUserNFTs(results);
+    const filteredResults = results.filter(
+      (nft) => nft !== null
+    ) as UserNft[];
+    setUserNFTs(filteredResults);
   };
 
   useEffect(() => {
