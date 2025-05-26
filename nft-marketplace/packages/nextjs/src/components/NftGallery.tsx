@@ -159,7 +159,7 @@ export function NftGallery() {
   });
 
   return (
-    <div className="p-6 bg-card-bg rounded-lg shadow-md border border-gray-700">
+    <div className="p-6 bg-card-bg rounded-lg shadow-xl border">
       {isLoadingGallery ? (
         <p className="text-center text-gray-400">Loading your NFTs...</p>
       ) : userNfts.length === 0 ? (

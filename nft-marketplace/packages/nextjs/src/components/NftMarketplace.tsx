@@ -11,9 +11,6 @@ import {
 } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { publicClient } from "@/lib/wagmi";
-// import NftMarketplaceAbi from "../../contracts/NftMarketplace.json";
-// import RandomIpfsNftAbi from "../../contracts/RandomIpfsNft.json"; // 需要 NFT 合约的 ABI
-// import deployedContracts from "../../deployments/hardhat_contracts.json";
 import { ethers } from "ethers"; // 用于获取 NFT 所有者和批准状态
 import {
   NFT_MARKETPLACE_CONTRACT_ADDRESS,
@@ -22,14 +19,7 @@ import {
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { Button } from "@/components/ui/button";
-
-// const chainId = 31337;
-// const NFT_MARKETPLACE_CONTRACT_ADDRESS = deployedContracts[chainId]?.hardhat?.[
-//   "NftMarketplace"
-// ]?.address as `0x${string}`;
-// const RANDOM_IPFS_NFT_CONTRACT_ADDRESS = deployedContracts[chainId]?.hardhat?.[
-//   "RandomIpfsNft"
-// ]?.address as `0x${string}`;
+import { LoadingSpinner } from "@/components/ui/spinner";
 
 interface Listing {
   price: bigint;
@@ -51,10 +41,6 @@ interface MarketplaceItem {
   metadata: NftMetadata | null;
   loadingMetadata: boolean;
 }
-
-const LoadingSpinner = () => (
-  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white inline-block ml-2"></div>
-);
 
 export function NftMarketplace() {
   const { address: accountAddress } = useAccount();
@@ -88,7 +74,7 @@ export function NftMarketplace() {
     if (!NFT_MARKETPLACE_CONTRACT_ADDRESS || !RANDOM_IPFS_NFT_CONTRACT_ADDRESS)
       return;
 
-    setIsLoadingMarketplace(true);
+    // setIsLoadingMarketplace(true);
     const items: MarketplaceItem[] = [];
     const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545"); // Hardhat 节点
     const nftContract = new ethers.Contract(
@@ -411,7 +397,7 @@ export function NftMarketplace() {
       {/* Proceeds Section */}
       <div className="mb-8 p-4 bg-gray-800 rounded-lg shadow-inner">
         <h3 className="text-xl font-semibold text-white mb-2">Your Proceeds</h3>
-        <p className="text-lg text-accent-green mb-4">
+        <p className="text-white text-lg text-accent-green mb-4">
           Available: {formatEther(proceeds)} ETH
         </p>
         <Button
@@ -455,7 +441,7 @@ export function NftMarketplace() {
             placeholder="Token ID"
             value={listItemId}
             onChange={(e) => setListItemId(e.target.value)}
-            className="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-3 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
           <input
             type="number"
@@ -463,7 +449,7 @@ export function NftMarketplace() {
             placeholder="Price (ETH)"
             value={listPrice}
             onChange={(e) => setListPrice(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
           <Button
             onClick={handleListItem}
@@ -501,7 +487,7 @@ export function NftMarketplace() {
             placeholder="Token ID"
             value={updateItemId}
             onChange={(e) => setUpdateItemId(e.target.value)}
-            className="w-full p-2 mb-3 bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-3 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
           <input
             type="number"
@@ -509,7 +495,7 @@ export function NftMarketplace() {
             placeholder="New Price (ETH)"
             value={updatePrice}
             onChange={(e) => setUpdatePrice(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
           <Button
             onClick={handleUpdateItem}
@@ -541,7 +527,7 @@ export function NftMarketplace() {
             placeholder="Token ID"
             value={cancelItemId}
             onChange={(e) => setCancelItemId(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
           <Button
             onClick={handleCancelItem}
@@ -585,7 +571,7 @@ export function NftMarketplace() {
                     : "/placeholder-nft.png"
                 }
                 alt={item.metadata?.name || `NFT #${item.tokenId.toString()}`}
-                className="w-full h-48 object-cover border-b border-gray-700"
+                className="w-full object-cover border-b border-gray-700"
               />
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-white mb-1">

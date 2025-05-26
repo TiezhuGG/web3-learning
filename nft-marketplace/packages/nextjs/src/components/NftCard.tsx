@@ -12,20 +12,15 @@ export default function NftCard({ nft }: { nft: UserNft }) {
       <img
         src={imageUrl}
         alt={name}
-        className="w-full h-48 object-cover border-b border-gray-700"
+        className="w-full object-cover border-b border-gray-700"
       />
-      <div className="p-4">
-        <h3 className="text-xl font-semibold text-white mb-2">{name}</h3>
-        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{description}</p>
-        <p className="text-gray-300 text-sm">
+
+      <div className="px-4 py-2 text-white">
+        <h3 className="font-semibold">{name}</h3>
+        <p className="text-xs line-clamp-2 my-1">{description}</p>
+        <p className="text-xs">
           Token ID: <span className="font-mono">{nft.tokenId.toString()}</span>
         </p>
-        {nft.loadingMetadata && (
-          <p className="text-blue-400 text-xs mt-2">Loading metadata...</p>
-        )}
-        {nft.errorLoadingMetadata && (
-          <p className="text-red-400 text-xs mt-2">Error loading metadata.</p>
-        )}
       </div>
     </div>
   );

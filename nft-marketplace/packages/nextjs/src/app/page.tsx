@@ -11,7 +11,7 @@ import { useWallet } from "@/hooks/useWallet";
 
 export default function Home() {
   const { isConnected } = useWallet();
-  const { tokenCounter, balance, mintNFT, mintFee } = useMintRandomNFT();
+  const { tokenCounter, balance, handleMintNFT, mintFee } = useMintRandomNFT();
   const {
     proceeds,
     listing,
@@ -24,7 +24,7 @@ export default function Home() {
 
   const handleMint = async () => {
     try {
-      const hash = await mintNFT();
+      const hash = await handleMintNFT();
       console.log("==========Mint transaction:", hash);
     } catch (error) {
       console.error("Failed to mint:", error);
@@ -69,7 +69,7 @@ export default function Home() {
   }, [isConnected, refetchListing]);
 
   return (
-    <div className="min-h-screen bg-dark-bg text-gray-200">
+    <div className="min-h-screen bg-dark-bg">
       <header className="py-6 px-8 flex justify-between items-center bg-gray-800 shadow-lg">
         <h1 className="text-3xl font-bold text-white">Random NFT Market</h1>
         <WalletConnect />
@@ -79,24 +79,24 @@ export default function Home() {
         {isConnected ? (
           <div className="space-y-12">
             {/* Minting Section */}
-            <section className="bg-card-bg rounded-lg shadow-xl p-8">
-              <h2 className="text-2xl font-semibold mb-6 text-white">
+            <section className="rounded-lg shadow-xl p-8 border">
+              <h2 className="text-2xl font-semibold mb-6">
                 Mint Your Random NFT
               </h2>
               <NftMinting />
             </section>
 
             {/* Your NFTs Section */}
-            <section className="bg-card-bg rounded-lg shadow-xl p-8">
-              <h2 className="text-2xl font-semibold mb-6 text-white">
+            <section className="gallery rounded-lg shadow-xl p-8 border">
+              <h2 className="text-2xl font-semibold mb-6">
                 Your NFTs
               </h2>
               <NftGallery />
             </section>
 
             {/* NFT Marketplace Section */}
-            <section className="bg-card-bg rounded-lg shadow-xl p-8">
-              <h2 className="text-2xl font-semibold mb-6 text-white">
+            <section className="rounded-lg shadow-xl p-8 border">
+              <h2 className="text-2xl font-semibold mb-6">
                 NFT Marketplace
               </h2>
               <NftMarketplace />
@@ -107,19 +107,17 @@ export default function Home() {
             <p className="text-xl text-gray-400 mb-6">
               Connect your wallet to explore the NFT market.
             </p>
-            {/* <ConnectWallet />  */}
           </div>
         )}
       </main>
 
       <footer className="py-4 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Random NFT Market. All rights
-        reserved.
+        &copy; {new Date().getFullYear()} Random NFT Market.
       </footer>
     </div>
     // <main className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-8">
     //   <div className="container mx-auto">
-    //     <h1 className="mb-8 text-center text-4xl font-bold text-white">
+    //     <h1 className="mb-8 text-center text-4xl font-bold">
     //       NFT Marketplace
     //     </h1>
 
