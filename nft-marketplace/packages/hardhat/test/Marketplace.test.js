@@ -194,7 +194,7 @@ const { developmentChains } = require("../helper-hardhat-config");
           ).to.be.revertedWithCustomError(nftMarketplace, "NoProceeds");
         });
 
-        it.only("withdraws proceeds", async function () {
+        it("withdraws proceeds", async function () {
           await nftMarketplace.listItem(basicNftAddress, TOKEN_ID, PRICE);
           nftMarketplace = nftMarketplaceContract.connect(user);
           await nftMarketplace.buyItem(basicNftAddress, TOKEN_ID, {

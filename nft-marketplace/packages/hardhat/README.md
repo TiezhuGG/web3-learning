@@ -41,6 +41,7 @@ pnpm hardhat deploy --tags randomIpfsNft
 #### 使用 chainlink VRF V2.5 请求随机数
 
 ```solidity
+// RandomIpfsNft.sol
 import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
@@ -83,7 +84,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus {
 
 ```
 
-使用 chainlink VRF V2.5 Mock 本地测试请求随机数：
+部署时使用 chainlink VRF V2.5 Mock本地测试请求随机数：
 
 ```js
 const FUND_AMOUNT = "1000"; // 1000 LINK (本地测试记得输入大一点防止gas不够revert)

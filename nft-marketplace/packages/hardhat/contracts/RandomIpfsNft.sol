@@ -13,9 +13,11 @@ error RandomIpfsNft_TransferFailed();
 contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
     // 类型声明
     enum Rarity {
-        COMMON,
-        RARE,
-        SUPER_RARE
+        Charizard,
+        Infernape,
+        Lucario,
+        Pikachu,
+        Squirtle
     }
 
     // VRF配置
@@ -50,10 +52,10 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
     constructor(
         address vrfCoordinatorV2_5, // VRF Coordinator地址
         uint256 subscriptionId, // 订阅ID
-        string[3] memory tokenURIs, // NFT的URI
+        string[5] memory tokenURIs, // NFT的URI
         uint256 mintFee // 铸造费用
     )
-        ERC721("Random IPFS NFT", "RIN")
+        ERC721("Pokemon NFT", "PKM")
         VRFConsumerBaseV2Plus(vrfCoordinatorV2_5) // sepolia COORDINATOR地址
     {
         s_subscriptionId = subscriptionId;
@@ -128,7 +130,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
         uint256 moddedRng
     ) public pure returns (Rarity) {
         uint256 cumulativeSum = 0; // 累加概率
-        uint256[3] memory chanceArray = getChanceArray(); // 获取概率数组
+        uint256[5] memory chanceArray = getChanceArray(); // 获取概率数组
 
         // 遍历概率数组
         for (uint256 i = 0; i < chanceArray.length; i++) {
@@ -159,8 +161,8 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
     }
 
     // 获取概率数组
-    function getChanceArray() public pure returns (uint256[3] memory) {
-        return [10, 30, MAX_CHANCE_VALUE]; // 分别代表 SUPER_RARE(10%), RARE(20%), COMMON(60%)的概率
+    function getChanceArray() public pure returns (uint256[5] memory) {
+        return [10, 30, 50, 80, MAX_CHANCE_VALUE]; // 分别代表 SUPER_RARE(10%), RARE(20%), COMMON(60%)的概率
     }
 
     function getMintFee() public view returns (uint256) {
