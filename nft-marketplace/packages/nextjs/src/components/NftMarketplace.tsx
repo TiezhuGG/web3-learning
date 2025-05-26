@@ -20,6 +20,8 @@ import {
 } from "@/constants";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/spinner";
+import { useMarketplace } from "@/hooks/useMarketplace";
+import ListForm from "./ListForm";
 
 interface Listing {
   price: bigint;
@@ -43,6 +45,8 @@ interface MarketplaceItem {
 }
 
 export function NftMarketplace() {
+  const { listNFT } = useMarketplace();
+
   const { address: accountAddress } = useAccount();
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
     []
@@ -238,7 +242,7 @@ export function NftMarketplace() {
           account: accountAddress,
           address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
           abi: RANDOM_IPFS_NFT_ABI,
-          functionName: "approve",  // 上架NFT之前需要先授权（调用NFT合约的approve，这是ERC721标准的要求）
+          functionName: "approve", // 上架NFT之前需要先授权（调用NFT合约的approve，这是ERC721标准的要求）
           args: [NFT_MARKETPLACE_CONTRACT_ADDRESS, tokenIdBigInt],
         });
         await writeApprove(request);
@@ -408,7 +412,7 @@ export function NftMarketplace() {
             isWithdrawing ||
             isWithdrawConfirming
           }
-          className="bg-accent-green hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="hover:bg-green-600"
         >
           {isWithdrawing
             ? "Withdrawing..."
@@ -429,121 +433,10 @@ export function NftMarketplace() {
         </div>
       )}
 
-      {/* Listing/Updating/Cancelling Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* List NFT */}
-        <div className="bg-gray-800 p-5 rounded-lg shadow-inner border border-gray-700">
-          <h4 className="text-lg font-semibold text-white mb-4">
-            List Your NFT
-          </h4>
-          <input
-            type="number"
-            placeholder="Token ID"
-            value={listItemId}
-            onChange={(e) => setListItemId(e.target.value)}
-            className="w-full p-2 mb-3 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          />
-          <input
-            type="number"
-            step="0.01"
-            placeholder="Price (ETH)"
-            value={listPrice}
-            onChange={(e) => setListPrice(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          />
-          <Button
-            onClick={handleListItem}
-            disabled={
-              !listItemId ||
-              !listPrice ||
-              parseFloat(listPrice) <= 0 ||
-              isApprovingTx ||
-              isApproving ||
-              isListingItem ||
-              isListItemConfirming
-            }
-            className="w-full text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isApprovingTx ||
-            isApproving ||
-            isListingItem ||
-            isListItemConfirming
-              ? "Processing..."
-              : "List Item"}
-            {(isApprovingTx ||
-              isApproving ||
-              isListingItem ||
-              isListItemConfirming) && <LoadingSpinner />}
-          </Button>
-        </div>
-
-        {/* Update Listing */}
-        <div className="bg-gray-800 p-5 rounded-lg shadow-inner border border-gray-700">
-          <h4 className="text-lg font-semibold text-white mb-4">
-            Update Listed NFT
-          </h4>
-          <input
-            type="number"
-            placeholder="Token ID"
-            value={updateItemId}
-            onChange={(e) => setUpdateItemId(e.target.value)}
-            className="w-full p-2 mb-3 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          />
-          <input
-            type="number"
-            step="0.01"
-            placeholder="New Price (ETH)"
-            value={updatePrice}
-            onChange={(e) => setUpdatePrice(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          />
-          <Button
-            onClick={handleUpdateItem}
-            disabled={
-              !updateItemId ||
-              !updatePrice ||
-              parseFloat(updatePrice) <= 0 ||
-              isUpdatingItem ||
-              isUpdateItemConfirming
-            }
-            className="w-full text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isUpdatingItem
-              ? "Updating..."
-              : isUpdateItemConfirming
-              ? "Confirming..."
-              : "Update Item"}
-            {(isUpdatingItem || isUpdateItemConfirming) && <LoadingSpinner />}
-          </Button>
-        </div>
-
-        {/* Cancel Listing */}
-        <div className="bg-gray-800 p-5 rounded-lg shadow-inner border border-gray-700">
-          <h4 className="text-lg font-semibold text-white mb-4">
-            Cancel Listed NFT
-          </h4>
-          <input
-            type="number"
-            placeholder="Token ID"
-            value={cancelItemId}
-            onChange={(e) => setCancelItemId(e.target.value)}
-            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
-          />
-          <Button
-            onClick={handleCancelItem}
-            disabled={
-              !cancelItemId || isCancellingItem || isCancelItemConfirming
-            }
-            className="w-full text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isCancellingItem
-              ? "Cancelling..."
-              : isCancelItemConfirming
-              ? "Confirming..."
-              : "Cancel Item"}
-            {(isCancellingItem || isCancelItemConfirming) && <LoadingSpinner />}
-          </Button>
-        </div>
+        <ListForm />
+        <ListForm formState="update" />
+        <ListForm formState="cancel" />
       </div>
 
       {/* Items for Sale Section */}
@@ -555,7 +448,7 @@ export function NftMarketplace() {
       ) : marketplaceItems.length === 0 ? (
         <p className="text-center text-gray-400">No NFTs listed for sale.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {marketplaceItems.map((item) => (
             <div
               key={`${item.nftAddress}-${item.tokenId.toString()}`}
@@ -583,10 +476,10 @@ export function NftMarketplace() {
                 <p className="text-gray-300 text-sm">
                   Seller:{" "}
                   <span className="font-mono">
-                    {item.seller.slice(0, 6)}...{item.seller.slice(-4)}
+                    {item?.seller?.slice(0, 6)}...{item?.seller?.slice(-4)}
                   </span>
                 </p>
-                <p className="text-lg font-bold text-accent-green mt-2">
+                <p className="text-lg font-bold mt-2">
                   Price: {formatEther(item.price)} ETH
                 </p>
                 {item.loadingMetadata && (

@@ -25,7 +25,7 @@ export function useGallery() {
 
   useEffect(() => {
     loadNFTs();
-  }, [address, tokenCounter, fetchNFTMetadata]);
+  }, [address, tokenCounter]);
 
   return {
     userNFTs,

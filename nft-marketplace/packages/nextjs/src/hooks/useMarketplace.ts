@@ -19,6 +19,7 @@ import {
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { NftMetadata } from "@/types";
+import { ReadContractParameters } from "viem";
 
 const CONTRACT_ADDRESS = NFT_MARKETPLACE_CONTRACT_ADDRESS;
 const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
@@ -27,78 +28,100 @@ const marketContractConfig: UseReadContractParameters = {
   address: CONTRACT_ADDRESS,
   abi: CONTRACT_ABI,
 };
+const publicContractConfig: ReadContractParameters = {
+  address: CONTRACT_ADDRESS,
+  abi: CONTRACT_ABI,
+  functionName: "",
+};
 
 export interface Listing {
   price: bigint;
   seller: string;
 }
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATWAY_PINATE_CLOUD_IPFS;
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
 
 export function useMarketplace() {
   const { address } = useAccount();
-  const { tokenCounter } = useMintRandomNFT();
+  const { tokenCounter, approveMarketplace } = useMintRandomNFT();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
-  const [userNFTs, setUserNFTs] = useState<NftMetadata[]>([]);
 
-  const getTokenUri = async (tokenId: bigint) => {
-    // 获取tokenURI
-    const tokenURi = (await publicClient?.readContract({
-      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      abi: RANDOM_IPFS_NFT_ABI,
-      functionName: "tokenURI",
-      args: [tokenId],
-    })) as string;
-
-    // 获取owner地址
-    const ownerAddress = (await publicClient?.readContract({
-      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      abi: RANDOM_IPFS_NFT_ABI,
-      functionName: "ownerOf",
-      args: [tokenId],
-    })) as Address;
-
-    // 判断是否为NFT所有者
-    if (address?.toLowerCase() === ownerAddress?.toLowerCase()) {
-      return tokenURi;
-    }
+  const getListItem = async (tokenId: bigint) => {
+    const listItem = await publicClient?.readContract({
+      ...publicContractConfig,
+      functionName: "getListing",
+      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+    });
+    return listItem;
   };
 
-  // 从IPFS获取NFT元数据信息
-  const fetchNFTMetadata = async (tokenUri: string) => {
-    if (tokenUri.startsWith("ipfs://")) {
-      const ipfsHash = tokenUri.replace("ipfs://", "");
-      const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
-      const response = await fetch(gatewayUrl);
-      if (!response.ok) {
-        throw new Error("Failed to fetch metadata");
-      }
-      const metadata: NftMetadata = await response.json();
-      return metadata;
-    } else {
-      throw new Error("Not IPFS");
-    }
-  };
-
-  useEffect(() => {
-    console.log("Marketplace contract config:", marketContractConfig);
-
-    const metadataPromises: Promise<NftMetadata>[] = [];
-    const loadNFTs = async () => {
-      for (let i = 0n; i < tokenCounter!; i++) {
-        const tokenUri = await getTokenUri(i);
-        console.log(`Listing for token ID ${i}: ${tokenUri}`, );
-        if (!tokenUri) continue;
-        metadataPromises.push(fetchNFTMetadata(tokenUri));
+  const { writeContractAsync: writeListItem, isPending: isListing } =
+    useWriteContract();
+  // 上架NFT
+  const listNFT = useCallback(
+    async (tokenId: bigint, price: bigint) => {
+      if (!publicClient) {
+        throw new Error("Public client is not initialized.");
       }
 
-      const results = await Promise.all(metadataPromises);
-      console.log(results);
-    };
-    loadNFTs();
-    console.log("Marketplace contract loaded");
-  }, [address, tokenCounter]);
+      await approveMarketplace(tokenId);
+
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "listItem",
+        args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId, price],
+        account: address,
+      });
+
+      await writeListItem(request);
+    },
+    [address, publicClient]
+  );
+
+  const { writeContractAsync: writeUpdateItem, isPending: isUpdating } =
+    useWriteContract();
+  // 更新NFT(价格)
+  const updateNFT = useCallback(
+    async (tokenId: bigint, price: bigint) => {
+      if (!publicClient) {
+        throw new Error("Public client is not initialized.");
+      }
+
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "updateListing",
+        args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId, price],
+        account: address,
+      });
+
+      await writeUpdateItem(request);
+    },
+    [address, publicClient]
+  );
+
+  // 取消上架
+  const { writeContractAsync: writeCancelItem, isPending: isCanceling } =
+    useWriteContract();
+  const cancelNFT = useCallback(
+    async (tokenId: bigint) => {
+      if (!publicClient) {
+        throw new Error("Public client is not initialized.");
+      }
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "cancelListing",
+        args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+        account: address,
+      });
+
+      await writeCancelItem(request);
+    },
+    [address, publicClient]
+  );
 
   const { data: proceeds } = useReadContract({
     ...marketContractConfig,
@@ -109,27 +132,21 @@ export function useMarketplace() {
     },
   });
 
-  const { data: listing, refetch: refetchListing } = useReadContract({
-    ...marketContractConfig,
-    functionName: "getListing",
-    args: [CONTRACT_ADDRESS, 0n],
-  });
+  // const listNFT = useCallback(
+  //   async (tokenId: bigint, price: bigint) => {
+  //     if (!address) throw new Error("No wallet connected");
 
-  const listNFT = useCallback(
-    async (tokenId: bigint, price: bigint) => {
-      if (!address) throw new Error("No wallet connected");
+  //     const hash = await writeContractAsync({
+  //       address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  //       abi: NFT_MARKETPLACE_NFT_ABI,
+  //       functionName: "listItem",
+  //       args: [CONTRACT_ADDRESS, tokenId, price],
+  //     });
 
-      const hash = await writeContractAsync({
-        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-        abi: NFT_MARKETPLACE_NFT_ABI,
-        functionName: "listItem",
-        args: [CONTRACT_ADDRESS, tokenId, price],
-      });
-
-      return hash;
-    },
-    [address, writeContractAsync]
-  );
+  //     return hash;
+  //   },
+  //   [address, writeContractAsync]
+  // );
 
   const buyNFT = useCallback(
     async (tokenId: bigint, price: bigint) => {
@@ -177,10 +194,13 @@ export function useMarketplace() {
   }, [address, writeContractAsync]);
 
   return {
-    proceeds,
-    listing,
-    refetchListing,
     listNFT,
+    isListing,
+    updateNFT,
+    isUpdating,
+    cancelNFT,
+    isCanceling,
+    proceeds,
     buyNFT,
     cancelListing,
     withdrawProceeds,
