@@ -13,5 +13,5 @@ export function copyToClipboard(text: string) {
 }
 
 export function getFirstWord(text: string) {
-  return text.slice(0, 1);
+  return text?.slice(0, 1);
 }

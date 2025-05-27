@@ -45,7 +45,8 @@ interface MarketplaceItem {
 }
 
 export function NftMarketplace() {
-  const { listNFT } = useMarketplace();
+  const { listNFT, buyNFT } = useMarketplace();
+  
 
   const { address: accountAddress } = useAccount();
   const [marketplaceItems, setMarketplaceItems] = useState<MarketplaceItem[]>(
@@ -60,6 +61,11 @@ export function NftMarketplace() {
   const [buyItemId, setBuyItemId] = useState<string>("");
   const [lastTxMessage, setLastTxMessage] = useState<string>("");
   const [isError, setIsError] = useState<boolean>(false);
+
+  const handleBuyNFT = async (tokenId: bigint, price: bigint) => {
+    console.log("handleBuyNFT", tokenId, price);
+    await buyNFT(tokenId, price);
+  };
 
   // --- 读取合约数据 ---
   const { data: proceedsData, refetch: refetchProceeds } = useReadContract({
@@ -149,31 +155,31 @@ export function NftMarketplace() {
   ]);
 
   // --- 事件监听 (刷新列表和收益) ---
-  useWatchContractEvent({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
-    eventName: "ItemListed",
-    onLogs: () => {
-      fetchMarketplaceItems();
-    },
-  });
-  useWatchContractEvent({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
-    eventName: "ItemCanceled",
-    onLogs: () => {
-      fetchMarketplaceItems();
-    },
-  });
-  useWatchContractEvent({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
-    eventName: "ItemBought",
-    onLogs: () => {
-      fetchMarketplaceItems();
-      refetchProceeds();
-    },
-  });
+  // useWatchContractEvent({
+  //   address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  //   abi: NFT_MARKETPLACE_NFT_ABI,
+  //   eventName: "ItemListed",
+  //   onLogs: () => {
+  //     fetchMarketplaceItems();
+  //   },
+  // });
+  // useWatchContractEvent({
+  //   address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  //   abi: NFT_MARKETPLACE_NFT_ABI,
+  //   eventName: "ItemCanceled",
+  //   onLogs: () => {
+  //     fetchMarketplaceItems();
+  //   },
+  // });
+  // useWatchContractEvent({
+  //   address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  //   abi: NFT_MARKETPLACE_NFT_ABI,
+  //   eventName: "ItemBought",
+  //   onLogs: () => {
+  //     fetchMarketplaceItems();
+  //     refetchProceeds();
+  //   },
+  // });
 
   // --- 列出 NFT ---
   const {
@@ -489,7 +495,8 @@ export function NftMarketplace() {
                 )}
                 {item.seller.toLowerCase() !== accountAddress?.toLowerCase() ? (
                   <Button
-                    onClick={() => handleBuyItem(item.tokenId, item.price)}
+                    // onClick={() => handleBuyItem(item.tokenId, item.price)}
+                    onClick={() => handleBuyNFT(item.tokenId, item.price)}
                     disabled={
                       (isBuyingItem && item.tokenId.toString() === buyItemId) ||
                       (isBuyItemConfirming &&

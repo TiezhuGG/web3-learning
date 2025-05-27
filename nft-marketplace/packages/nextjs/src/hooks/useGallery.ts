@@ -24,10 +24,12 @@ export function useGallery() {
   };
 
   useEffect(() => {
+    console.log('渲染了?')
     loadNFTs();
   }, [address, tokenCounter]);
 
   return {
     userNFTs,
+    setUserNFTs
   };
 }

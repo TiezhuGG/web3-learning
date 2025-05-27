@@ -31,7 +31,6 @@ export function useMintRandomNFT() {
   const { address, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
-  const { getOwnerAddress } = useFetchNFTMetadata();
   const [lastMintedTokenId, setLastMintedTokenId] = useState<bigint | null>(
     null
   );
@@ -40,6 +39,9 @@ export function useMintRandomNFT() {
   const { data: mintFeeData } = useReadContract({
     ...randomContractConfig,
     functionName: "getMintFee",
+    query: {
+      enabled: !!randomContractConfig.address,
+    },
   });
 
   const mintFee = mintFeeData as BigintType;
@@ -48,6 +50,9 @@ export function useMintRandomNFT() {
     useReadContract({
       ...randomContractConfig,
       functionName: "getTokenCounter",
+      query: {
+        enabled: !!randomContractConfig.address,
+      },
     });
 
   const tokenCounter = tokenCounterData as BigintType;
@@ -115,58 +120,7 @@ export function useMintRandomNFT() {
       setIsMinting(false);
       throw new Error("Failed to mint NFT");
     }
-  }, [address, chainId, tokenCounter]);
-
-  const { writeContractAsync: writeApprove, isPending: isApproving } =
-    useWriteContract();
-
-  const approveMarketplace = useCallback(
-    async (tokenId: bigint) => {
-      try {
-        if (!publicClient || !address) {
-          throw new Error("Wallet not connected or client not initialized");
-        }
-
-        // 检查当前用户是否为NFT所有者
-        const ownerAddress = await getOwnerAddress(tokenId);
-        if (address.toLowerCase() !== ownerAddress.toLowerCase()) {
-          toast.error("You are not the owner of this NFT");
-          throw new Error("You are not the owner of this NFT");
-        }
-
-        // 检查当前tokenId是否已授权
-        const { result } = (await publicClient.simulateContract({
-          address: CONTRACT_ADDRESS,
-          abi: CONTRACT_ABI,
-          functionName: "getApproved",
-          args: [tokenId],
-          account: address,
-        })) as { result: Address };
-
-        // 未授权时调用approve函数进行授权
-        if (
-          result.toLowerCase() !==
-          NFT_MARKETPLACE_CONTRACT_ADDRESS.toLowerCase()
-        ) {
-          console.log("Approving marketplace...", isApproving);
-
-          const { request } = await publicClient.simulateContract({
-            address: CONTRACT_ADDRESS,
-            abi: CONTRACT_ABI,
-            functionName: "approve",
-            args: [NFT_MARKETPLACE_CONTRACT_ADDRESS, tokenId],
-            account: address,
-          });
-
-          const hash = await writeApprove(request);
-          return hash;
-        }
-      } catch (error) {
-        throw new Error("Failed to approve marketplace.");
-      }
-    },
-    [address, writeContractAsync, publicClient]
-  );
+  }, [address, chainId, tokenCounter, mintFee]);
 
   return {
     chainId,
@@ -177,7 +131,5 @@ export function useMintRandomNFT() {
     lastMintedTokenId,
     handleMintNFT,
     refetchTokenCounter,
-    approveMarketplace,
-    isApproving,
   };
 }

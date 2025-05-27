@@ -3,7 +3,7 @@ import { useGallery } from "@/hooks/useGallery";
 
 export function NftGallery() {
   const { userNFTs } = useGallery();
-
+  console.log('画廊', userNFTs)
   return (
     <div className="p-6 bg-card-bg rounded-lg shadow-xl border">
       {userNFTs.length === 0 ? (

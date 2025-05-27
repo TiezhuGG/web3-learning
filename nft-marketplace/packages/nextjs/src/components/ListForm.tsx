@@ -21,20 +21,22 @@ export default function ListForm({ formState }: { formState?: string }) {
     updateNFT,
     isUpdating,
     cancelNFT,
-    cancelListing,
+    isCanceling,
   } = useMarketplace();
-  const { isApproving } = useMintRandomNFT();
 
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
 
-  const handleListItem = async (e: React.FormEvent) => {
+  const handleActions = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setFormData(initialFormData);
       if (formState === "update") {
         await updateNFT(BigInt(formData.tokenId), parseEther(formData.price));
+      } else if (formState === "cancel") {
+        await cancelNFT(BigInt(formData.tokenId));
       } else {
+        console.log('formData:', formData)
         await listNFT(BigInt(formData.tokenId), parseEther(formData.price));
       }
     } catch (error) {
@@ -47,7 +49,7 @@ export default function ListForm({ formState }: { formState?: string }) {
 
   return (
     <form
-      onSubmit={handleListItem}
+      onSubmit={handleActions}
       className="bg-gray-800 p-5 rounded-lg flex flex-col justify-between"
     >
       <div>
@@ -94,28 +96,23 @@ export default function ListForm({ formState }: { formState?: string }) {
         type="submit"
         disabled={
           isListing ||
-          isApproving ||
           isUpdating ||
+          isCanceling ||
           !formData.tokenId ||
-          !formData.price
+          (formState !== "cancel" && !formData.price)
         }
         className="text-white rounded-lg"
       >
-        {isListing || isApproving || isUpdating
+        {isListing  || isUpdating
           ? "Processing..."
           : formState === "update"
           ? "Update NFT"
           : formState === "cancel"
           ? "Cancel NFT"
           : "List NFT"}
-        {(isListing || isApproving || isUpdating) && <LoadingSpinner />}
-        {/* {isApprovingTx || isApproving || isListingItem || isListItemConfirming
-          ? "Processing..."
-          : "List Item"}
-        {(isApprovingTx ||
-          isApproving ||
-          isListingItem ||
-          isListItemConfirming) && <LoadingSpinner />} */}
+        {(isListing  || isUpdating || isCanceling) && (
+          <LoadingSpinner />
+        )}
       </Button>
     </form>
   );

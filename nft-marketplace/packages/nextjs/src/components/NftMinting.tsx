@@ -11,7 +11,7 @@ export function NftMinting() {
     <div className="p-6 bg-card-bg rounded-lg shadow-md border">
       <div className="flex items-center mb-4">
         <p className="text-lg font-medium">
-          Mint Fee: {formatEther(mintFee!)} ETH
+          Mint Fee: {mintFee ? formatEther(mintFee!) : 0.01} ETH
         </p>
       </div>
 
