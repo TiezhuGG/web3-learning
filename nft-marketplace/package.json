@@ -11,7 +11,7 @@
     "hardhat:dev": "pnpm --filter @nft/hardhat dev",
     "compile": "--filter @nft/hardhat hardhat compile",
     "test": "--filter @nft/hardhat hardhat test",
-    "frontend:dev": "pnpm --filter @nft/frontend dev"
+    "frontend:dev": "pnpm --filter @nft/nextjs dev"
   },
   "keywords": [
     "nft",

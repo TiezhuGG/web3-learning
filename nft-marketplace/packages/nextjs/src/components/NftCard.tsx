@@ -35,7 +35,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
   const tokenId = nft.tokenId.toString();
   const price = "price" in nft ? nft.price : 0n;
   const seller = "seller" in nft ? nft.seller : "0x0000...0000";
-  const a = 0n;
+  
   return (
     <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden transform transition duration-300 hover:scale-105">
       <img
