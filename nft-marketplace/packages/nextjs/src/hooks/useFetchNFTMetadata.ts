@@ -1,19 +1,19 @@
 import { Address } from "viem";
 import { useAccount, usePublicClient } from "wagmi";
 import {
+  NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  NFT_MARKETPLACE_NFT_ABI,
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { NftMetadata } from "@/types";
-import { useCallback } from "react";
-import { useMintRandomNFT } from "./useMintRandomNFT";
+import { Listing, NftMetadata } from "@/types";
+import { useNftContext } from "@/context/NftContext";
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
 
 export function useFetchNFTMetadata() {
-  const { address } = useAccount();
   const publicClient = usePublicClient();
-  const { tokenCounter } = useMintRandomNFT();
+  const { address, tokenCounter } = useNftContext();
 
   // 获取owner地址
   const getOwnerAddress = async (tokenId: bigint) => {
@@ -49,33 +49,99 @@ export function useFetchNFTMetadata() {
   };
 
   // 从IPFS获取NFT元数据信息
-  const fetchNFTMetadata = useCallback(
-    async (tokenId: bigint) => {
-      const tokenUri = await getTokenUri(tokenId);
-      if (tokenUri && tokenUri.startsWith("ipfs://")) {
-        const ipfsHash = tokenUri.replace("ipfs://", "");
-        const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
-        const response = await fetch(gatewayUrl);
-        if (!response.ok) {
-          throw new Error("Failed to fetch metadata");
-        }
-        const metadata: NftMetadata = await response.json();
+  const fetchDataFromIpfs = async (tokenId: bigint, caller?: string) => {
+    let tokenUri;
+    if (caller === "marketplace") {
+      // 调用者是市场合约，不用判断是否为NFT所有者
+      tokenUri = (await publicClient?.readContract({
+        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+        abi: RANDOM_IPFS_NFT_ABI,
+        functionName: "tokenURI",
+        args: [tokenId],
+      })) as string;
+    } else {
+      tokenUri = await getTokenUri(tokenId);
+    }
 
-        return {
-          tokenId,
-          tokenUri,
-          metadata,
-        };
+    if (tokenUri && tokenUri.startsWith("ipfs://")) {
+      const ipfsHash = tokenUri.replace("ipfs://", "");
+      const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
+      const response = await fetch(gatewayUrl);
+      if (!response.ok) {
+        throw new Error("Failed to fetch metadata");
       }
+      const metadata: NftMetadata = await response.json();
 
-      return null;
-    },
-    [address]
-  );
+      return {
+        tokenUri,
+        metadata,
+      };
+    }
+  };
+
+  const fetchUserData = async (tokenId: bigint) => {
+    const result = await fetchDataFromIpfs(tokenId);
+    if (result) {
+      const { tokenUri, metadata } = result;
+
+      return {
+        tokenId,
+        tokenUri,
+        metadata,
+      };
+    }
+
+    return null;
+  };
+
+  const getListItem = async (tokenId: bigint) => {
+    const listItem = await publicClient?.readContract({
+      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+      abi: NFT_MARKETPLACE_NFT_ABI,
+      functionName: "getListing",
+      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+    });
+
+    return listItem as Listing;
+  };
+
+  // 过滤已上架的tokenId
+  const filterListedTokenIds = async () => {
+    const listingStatus = await Promise.all(
+      Array.from({ length: Number(tokenCounter!) }, (_, i) =>
+        getListItem(BigInt(i))
+      )
+    );
+
+    const listedTokenIds = listingStatus
+      .map((listingItem, i) => (listingItem.price > 0n ? BigInt(i) : null))
+      .filter(Boolean) as bigint[];
+
+    return listedTokenIds;
+  };
+
+  const fetchMarketData = async (tokenId: bigint) => {
+    const result = await fetchDataFromIpfs(tokenId, "marketplace");
+    if (result) {
+      const { tokenUri, metadata } = result;
+      const { price, seller } = await getListItem(tokenId);
+
+      return {
+        tokenId,
+        tokenUri,
+        metadata,
+        price: price,
+        seller: seller,
+      };
+    }
+  };
 
   return {
     getOwnerAddress,
     getTokenUri,
-    fetchNFTMetadata,
+    fetchDataFromIpfs,
+    fetchUserData,
+    fetchMarketData,
+    filterListedTokenIds,
   };
 }

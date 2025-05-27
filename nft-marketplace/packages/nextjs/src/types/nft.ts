@@ -1,3 +1,9 @@
+import { Address } from "viem";
+
+export interface Listing {
+  price: bigint;
+  seller: Address;
+}
 export interface NftMetadata {
   name: string;
   description: string;
@@ -11,6 +17,15 @@ export interface UserNft {
   metadata: NftMetadata | null;
   loadingMetadata?: boolean;
   errorLoadingMetadata?: boolean;
+}
+
+export interface MarketplaceNft {
+  tokenId: bigint;
+  price: bigint;
+  seller: `0x${string}`;
+  metadata: NftMetadata | null;
+  nftAddress?: `0x${string}`;
+  loadingMetadata?: boolean;
 }
 
 export interface NFTRequestedEvent {

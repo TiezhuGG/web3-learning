@@ -1,30 +1,24 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { useMarketplace } from "@/hooks/useMarketplace";
 import { parseEther } from "viem";
 import { LoadingSpinner } from "./ui/spinner";
-import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
 
 type FormDataType = {
   tokenId: string;
   price: string;
 };
 
-const initialFormData = {
+const initialFormData: FormDataType = {
   tokenId: "",
   price: "",
 };
-export default function ListForm({ formState }: { formState?: string }) {
-  const {
-    listNFT,
-    isListing,
-    updateNFT,
-    isUpdating,
-    cancelNFT,
-    isCanceling,
-  } = useMarketplace();
 
-  const [formData, setFormData] = useState<FormDataType>(initialFormData);
+export default function ListForm({ formState }: { formState?: string }) {
+  const { listNFT, isListing, updateNFT, isUpdating, cancelNFT, isCanceling } =
+    useMarketplace();
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleActions = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,10 +30,10 @@ export default function ListForm({ formState }: { formState?: string }) {
       } else if (formState === "cancel") {
         await cancelNFT(BigInt(formData.tokenId));
       } else {
-        console.log('formData:', formData)
         await listNFT(BigInt(formData.tokenId), parseEther(formData.price));
       }
     } catch (error) {
+      console.error(error);
       setFormData({
         tokenId: formData.tokenId,
         price: formData.price,
@@ -88,7 +82,7 @@ export default function ListForm({ formState }: { formState?: string }) {
                 [e.target.name]: e.target.value,
               })
             }
-            className="w-full p-2 mb-4 bg-gray-800 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
+            className="w-full p-2 mb-4 border border-gray-600 rounded text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-blue"
           />
         )}
       </div>
@@ -101,18 +95,15 @@ export default function ListForm({ formState }: { formState?: string }) {
           !formData.tokenId ||
           (formState !== "cancel" && !formData.price)
         }
-        className="text-white rounded-lg"
       >
-        {isListing  || isUpdating
+        {isListing || isUpdating
           ? "Processing..."
           : formState === "update"
           ? "Update NFT"
           : formState === "cancel"
           ? "Cancel NFT"
           : "List NFT"}
-        {(isListing  || isUpdating || isCanceling) && (
-          <LoadingSpinner />
-        )}
+        {(isListing || isUpdating || isCanceling) && <LoadingSpinner />}
       </Button>
     </form>
   );

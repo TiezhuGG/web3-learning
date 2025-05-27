@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { useMintRandomNFT } from "./useMintRandomNFT";
 import { UserNft } from "@/types";
 import { useFetchNFTMetadata } from "./useFetchNFTMetadata";
+import { useNftContext } from "@/context/NftContext";
 
 export function useGallery() {
-  const { address } = useAccount();
-  const { tokenCounter } = useMintRandomNFT();
-  const { fetchNFTMetadata } = useFetchNFTMetadata();
+  const { address, tokenCounter, myNFTCount } = useNftContext();
+  const { fetchUserData } = useFetchNFTMetadata();
 
   const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
 
@@ -15,7 +14,7 @@ export function useGallery() {
     const metadataPromises: Promise<UserNft | null>[] = [];
 
     for (let i = 0n; i < tokenCounter!; i++) {
-      metadataPromises.push(fetchNFTMetadata(i));
+      metadataPromises.push(fetchUserData(i));
     }
 
     const results = await Promise.all(metadataPromises);
@@ -24,12 +23,11 @@ export function useGallery() {
   };
 
   useEffect(() => {
-    console.log('渲染了?')
     loadNFTs();
-  }, [address, tokenCounter]);
+  }, [address, tokenCounter, myNFTCount]);
 
   return {
     userNFTs,
-    setUserNFTs
+    setUserNFTs,
   };
 }

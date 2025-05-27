@@ -11,7 +11,7 @@ const HARDHAT_RPC_URL = process.env.NEXT_PUBLIC_HARDHAT_RPC_URL!;
 export const publicClient = createPublicClient({
   chain: hardhat,
   transport: http(HARDHAT_RPC_URL),
-})
+});
 
 export const config = createConfig({
   chains: [hardhat, sepolia],
@@ -29,3 +29,5 @@ export const config = createConfig({
   ],
   ssr: true,
 });
+
+

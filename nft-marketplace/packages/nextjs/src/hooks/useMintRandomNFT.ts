@@ -7,16 +7,14 @@ import { useCallback, useState } from "react";
 import {
   useAccount,
   useWriteContract,
-  useReadContract,
   usePublicClient,
   type UseReadContractParameters,
 } from "wagmi";
-import { Address, formatEther } from "viem";
-import { BigintType } from "@/types";
+import { formatEther } from "viem";
 import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
 import { toast } from "sonner";
 import { useWallet } from "./useWallet";
-import { useFetchNFTMetadata } from "./useFetchNFTMetadata";
+import { useNftContext } from "@/context/NftContext";
 
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;
@@ -35,33 +33,7 @@ export function useMintRandomNFT() {
     null
   );
   const [isMinting, setIsMinting] = useState(false);
-
-  const { data: mintFeeData } = useReadContract({
-    ...randomContractConfig,
-    functionName: "getMintFee",
-    query: {
-      enabled: !!randomContractConfig.address,
-    },
-  });
-
-  const mintFee = mintFeeData as BigintType;
-
-  const { data: tokenCounterData, refetch: refetchTokenCounter } =
-    useReadContract({
-      ...randomContractConfig,
-      functionName: "getTokenCounter",
-      query: {
-        enabled: !!randomContractConfig.address,
-      },
-    });
-
-  const tokenCounter = tokenCounterData as BigintType;
-
-  const { data: myNFTCount } = useReadContract({
-    ...randomContractConfig,
-    functionName: "balanceOf",
-    args: [address!],
-  });
+  const { mintFee, tokenCounter, refetchTokenCounter } = useNftContext();
 
   const {
     getRequestIdBySimulate,
@@ -93,7 +65,7 @@ export function useMintRandomNFT() {
         if (result) {
           refetchBalance();
           setIsMinting(false);
-          const { data: newTokenCounter } = await refetchTokenCounter();
+          const { data: newTokenCounter } = await refetchTokenCounter()!;
           setLastMintedTokenId(
             typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
           );
@@ -120,16 +92,19 @@ export function useMintRandomNFT() {
       setIsMinting(false);
       throw new Error("Failed to mint NFT");
     }
-  }, [address, chainId, tokenCounter, mintFee]);
+  }, [
+    address,
+    chainId,
+    tokenCounter,
+    mintFee,
+    publicClient,
+    refetchTokenCounter,
+    writeContractAsync,
+  ]);
 
   return {
-    chainId,
-    mintFee,
-    tokenCounter,
-    myNFTCount,
     isMinting,
     lastMintedTokenId,
     handleMintNFT,
-    refetchTokenCounter,
   };
 }

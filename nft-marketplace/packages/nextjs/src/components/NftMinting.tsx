@@ -2,10 +2,11 @@ import { formatEther } from "viem";
 import { Button } from "@/components/ui/button";
 import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
 import { LoadingSpinner } from "@/components/ui/spinner";
+import { useNftContext } from "@/context/NftContext";
 
 export function NftMinting() {
-  const { mintFee, handleMintNFT, isMinting, lastMintedTokenId } =
-    useMintRandomNFT();
+  const { handleMintNFT, isMinting, lastMintedTokenId } = useMintRandomNFT();
+  const { mintFee } = useNftContext();
 
   return (
     <div className="p-6 bg-card-bg rounded-lg shadow-md border">
