@@ -1,5 +1,3 @@
-import { networks } from "@/constants/networks";
-import { Address, BalanceDataProps, ChainType } from "@/types";
 import {
   type Connector,
   type CreateConnectorFn,
@@ -9,6 +7,8 @@ import {
   useDisconnect,
   useSwitchChain,
 } from "wagmi";
+import { networks } from "@/constants/networks";
+import { Address, BalanceDataProps, ChainType } from "@/types";
 
 interface WalletProps {
   address: Address | undefined;

@@ -1,9 +1,9 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { WagmiProvider } from "wagmi";
 import { config } from "@/lib/wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NftProvider } from "@/context/NftContext";
 import { MarketplaceProvider } from "@/context/MarketplaceContext";
 

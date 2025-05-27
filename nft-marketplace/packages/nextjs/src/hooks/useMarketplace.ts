@@ -1,18 +1,18 @@
+import { useCallback } from "react";
+import { Address } from "viem";
+import { useWriteContract, usePublicClient } from "wagmi";
+import { toast } from "sonner";
 import {
   NFT_MARKETPLACE_NFT_ABI,
   NFT_MARKETPLACE_CONTRACT_ADDRESS,
 } from "@/constants/nftMarketplace";
-import { useCallback } from "react";
-import { Address } from "viem";
-import { useWriteContract, usePublicClient } from "wagmi";
 import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { toast } from "sonner";
-import { useWallet } from "./useWallet";
 import { useNftContext } from "@/context/NftContext";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
+import { useWallet } from "./useWallet";
 
 const CONTRACT_ADDRESS = NFT_MARKETPLACE_CONTRACT_ADDRESS;
 const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
@@ -20,7 +20,7 @@ const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
 export function useMarketplace() {
   const { address } = useNftContext();
   const { refetchBalance } = useWallet();
-  const { tokenCounter, refetchMyNFTCount } = useNftContext();
+  const { tokenCounter } = useNftContext();
   const { writeContractAsync } = useWriteContract();
   const { checkIsOwner, refetchProceeds } = useMarketplaceContext();
   const publicClient = usePublicClient();
@@ -160,14 +160,13 @@ export function useMarketplace() {
         account: address,
       });
 
-      await writeBuyItem(request);
-      // const receipt = await publicClient.waitForTransactionReceipt({
-      //   hash,
-      // });
-      // if (receipt.status === "success") {
-      //   refetchBalance();
-      //   refetchMyNFTCount(); // MyNFTCount变化会刷新我的NFT列表
-      // }
+      const hash = await writeBuyItem(request);
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+      });
+      if (receipt.status === "success") {
+        toast.success("Buy NFT successfully!");
+      }
     },
     [publicClient, writeBuyItem, address]
   );

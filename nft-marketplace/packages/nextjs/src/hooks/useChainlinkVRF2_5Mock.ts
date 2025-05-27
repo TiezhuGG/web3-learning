@@ -1,3 +1,5 @@
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useCallback } from "react";
 import { decodeEventLog } from "viem";
 import {
   MOCK_VRF_ABI,
@@ -5,9 +7,7 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { BigintType, NFTRequestedEvent } from "@/types";
-import { useCallback } from "react";
 
 /**
  * 模拟使用Chainlink VRF2.5

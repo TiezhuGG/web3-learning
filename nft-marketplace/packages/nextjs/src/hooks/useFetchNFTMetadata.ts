@@ -1,5 +1,5 @@
 import { Address } from "viem";
-import { useAccount, usePublicClient } from "wagmi";
+import { usePublicClient } from "wagmi";
 import {
   NFT_MARKETPLACE_CONTRACT_ADDRESS,
   NFT_MARKETPLACE_NFT_ABI,

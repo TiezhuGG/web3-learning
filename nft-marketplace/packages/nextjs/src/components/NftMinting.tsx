@@ -3,33 +3,57 @@ import { Button } from "@/components/ui/button";
 import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import { useNftContext } from "@/context/NftContext";
+import { useMarketplaceContext } from "@/context/MarketplaceContext";
+import { useMarketplace } from "@/hooks/useMarketplace";
 
 export function NftMinting() {
   const { handleMintNFT, isMinting, lastMintedTokenId } = useMintRandomNFT();
   const { mintFee } = useNftContext();
+  const { proceeds } = useMarketplaceContext();
+  const { withdrawProceeds, isWithdrawing } = useMarketplace();
 
   return (
-    <div className="p-6 bg-card-bg rounded-lg shadow-md border">
-      <div className="flex items-center mb-4">
-        <p className="text-lg font-medium">
-          Mint Fee: {mintFee ? formatEther(mintFee!) : 0.01} ETH
-        </p>
+    <div className="flex justify-between p-5 bg-card-bg rounded-lg shadow-md border">
+      <div>
+        <h2 className="flex items-center text-2xl font-semibold mb-5">
+          Mint Your NFT
+          <p className="ml-2 text-lg font-medium">
+            ( Mint Fee: {mintFee ? formatEther(mintFee!) : 0.01} ETH )
+          </p>
+        </h2>
+
+        <Button
+          onClick={handleMintNFT}
+          disabled={isMinting}
+          className="hover:bg-green-600"
+        >
+          {isMinting ? `Minting NFT...` : "Mint Random NFT"}
+          {isMinting && <LoadingSpinner />}
+        </Button>
+
+        {lastMintedTokenId !== null && (
+          <p className="mt-4 text-sm text-accent-green">
+            🎉 Successfully Minted NFT with Token ID: {lastMintedTokenId}
+          </p>
+        )}
       </div>
 
-      <Button
-        onClick={handleMintNFT}
-        disabled={isMinting}
-        className="transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isMinting ? `Minting NFT...` : "Mint Random NFT"}
-        {isMinting && <LoadingSpinner />}
-      </Button>
-
-      {lastMintedTokenId !== null && (
-        <p className="mt-4 text-sm text-accent-green">
-          🎉 Successfully Minted NFT with Token ID: {lastMintedTokenId}!
-        </p>
-      )}
+      <div>
+        <h3 className="flex items-center text-2xl font-semibold mb-5">
+          Your Proceeds
+          <p className="ml-2 text-lg font-medium">
+            ( {formatEther(proceeds)} ETH )
+          </p>
+        </h3>
+        <Button
+          onClick={withdrawProceeds}
+          disabled={isWithdrawing || proceeds === 0n}
+          className="hover:bg-green-600"
+        >
+          {isWithdrawing ? "Withdrawing..." : "Withdraw Proceeds"}
+          {isWithdrawing && <LoadingSpinner />}
+        </Button>
+      </div>
     </div>
   );
 }

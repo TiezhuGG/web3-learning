@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -5,11 +7,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { copyToClipboard, formatAddress, getFirstWord } from "./utils";
-import { Check, ChevronDown, Copy, LogOut } from "lucide-react";
-import SwitchNetwork from "./SwitchNetwork";
 import { useWallet } from "@/hooks/useWallet";
+import { copyToClipboard, formatAddress, getFirstWord } from "./utils";
+import SwitchNetwork from "./SwitchNetwork";
 
 export default function WalletButton() {
   const { address, chain, balanceData, disconnect } = useWallet();

@@ -1,12 +1,11 @@
+import { useContext, createContext } from "react";
+import { useAccount, useReadContract, type UseReadContractParameters } from "wagmi";
+import { Address } from "viem";
 import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants/randomIpfsNft";
 import { BigintType } from "@/types";
-import { useContext, createContext } from "react";
-import { Address } from "viem";
-import { useAccount, type UseReadContractParameters } from "wagmi";
-import { useReadContract } from "wagmi";
 
 const randomContractConfig: UseReadContractParameters = {
   address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,

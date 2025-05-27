@@ -4,7 +4,7 @@ export default function NftCard({ nft }: { nft: UserNft }) {
   const imageUrl = nft.metadata?.image
     ? nft.metadata.image.replace("ipfs://", "https://ipfs.io/ipfs/")
     : "/placeholder-nft.png"; // 占位符图片
-  const name = nft.metadata?.name || `NFT #${nft.tokenId.toString()}`;
+  const name = `${nft.metadata?.name}`;
   const description = nft.metadata?.description || "No description available.";
 
   return (
@@ -16,7 +16,10 @@ export default function NftCard({ nft }: { nft: UserNft }) {
       />
 
       <div className="px-4 py-2 text-white">
-        <h3 className="font-semibold">{name}</h3>
+        <h3 className="flex justify-between font-semibold">
+          {name}
+          <span>#{nft.tokenId.toString()}</span>
+        </h3>
         <p className="text-xs line-clamp-2 my-1">{description}</p>
         <p className="text-xs">
           Token ID: <span className="font-mono">{nft.tokenId.toString()}</span>

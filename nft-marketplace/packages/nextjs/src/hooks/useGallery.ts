@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import { UserNft } from "@/types";
-import { useFetchNFTMetadata } from "./useFetchNFTMetadata";
 import { useNftContext } from "@/context/NftContext";
+import { useFetchNFTMetadata } from "./useFetchNFTMetadata";
 
 export function useGallery() {
   const { address, tokenCounter, myNFTCount } = useNftContext();

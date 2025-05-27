@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -5,10 +6,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { getFirstWord } from "./utils";
 import { useWallet } from "@/hooks/useWallet";
 import { ChevronDown } from "lucide-react";
+import { getFirstWord } from "./utils";
 
 export default function SwitchNetwork() {
   const {

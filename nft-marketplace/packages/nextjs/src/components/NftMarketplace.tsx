@@ -1,88 +1,34 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  useAccount,
-  useReadContract,
-  useSimulateContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-  useWatchContractEvent,
-} from "wagmi";
-import { parseEther, formatEther } from "viem";
-import { publicClient } from "@/lib/wagmi";
-import { ethers } from "ethers"; // 用于获取 NFT 所有者和批准状态
-import {
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
-  NFT_MARKETPLACE_NFT_ABI,
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-} from "@/constants";
+import React, { useState } from "react";
+import { formatEther } from "viem";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import { useMarketplace } from "@/hooks/useMarketplace";
-import ListForm from "./ListForm";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
-
-// interface Listing {
-//   price: bigint;
-//   seller: `0x${string}`;
-// }
-
-// interface NftMetadata {
-//   name: string;
-//   description: string;
-//   image: string;
-//   attributes: { trait_type: string; value: number | string }[];
-// }
-
-// interface MarketplaceItem {
-//   nftAddress: `0x${string}`;
-//   tokenId: bigint;
-//   price: bigint;
-//   seller: `0x${string}`;
-//   metadata: NftMetadata | null;
-//   loadingMetadata: boolean;
-// }
+import { useNftContext } from "@/context/NftContext";
+import { formatAddress } from "@/lib/utils";
+import ListForm from "./ListForm";
 
 export function NftMarketplace() {
-  const { buyNFT, withdrawProceeds } = useMarketplace();
-  const { marketplaceNFTs, proceeds } = useMarketplaceContext();
-  const { address: accountAddress } = useAccount();
-  const [isLoadingMarketplace, setIsLoadingMarketplace] = useState(false);
+  const { buyNFT, isBuying } = useMarketplace();
+  const { marketplaceNFTs } = useMarketplaceContext();
+  const { address: accountAddress } = useNftContext();
+
+  const [buyItemTokenId, setBuyItemTokenId] = useState<string | null>(null);
+
+  const handleBuyNFT = async (tokenId: bigint, price: bigint) => {
+    try {
+      setBuyItemTokenId(tokenId.toString());
+      await buyNFT(tokenId, price);
+    } catch (error) {
+      setBuyItemTokenId(null);
+    }
+  };
 
   return (
     <div className="p-6 bg-card-bg rounded-lg shadow-md border border-gray-700">
-      <div className="mb-8 p-4 bg-gray-800 rounded-lg shadow-inner">
-        <h3 className="text-xl font-semibold text-white mb-2">Your Proceeds</h3>
-        <p className="text-white text-lg text-accent-green mb-4">
-          Available: {formatEther(proceeds)} ETH
-        </p>
-        <Button
-          onClick={withdrawProceeds}
-          disabled={proceeds === 0n}
-          className="hover:bg-green-600"
-        >
-          {"Withdraw Proceeds"}
-
-          {/* {isWithdrawing
-            ? "Withdrawing..."
-            : isWithdrawConfirming
-            ? "Confirming..."
-            : "Withdraw Proceeds"}
-          {(isWithdrawing || isWithdrawConfirming) && <LoadingSpinner />} */}
-        </Button>
-      </div>
-
-      {/* {lastTxMessage && (
-        <div
-          className={`p-3 mb-4 rounded-md ${
-            isError ? "bg-red-800 text-red-100" : "bg-blue-800 text-blue-100"
-          }`}
-        >
-          {lastTxMessage}
-        </div>
-      )} */}
+      <h2 className="text-2xl font-semibold mb-6">NFT Marketplace</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <ListForm />
@@ -124,7 +70,8 @@ export function NftMarketplace() {
                 <p className="text-gray-300 text-sm">
                   Seller:{" "}
                   <span className="font-mono">
-                    {item?.seller?.slice(0, 6)}...{item?.seller?.slice(-4)}
+                    {formatAddress(item?.seller)}
+                    {/* {item?.seller?.slice(0, 6)}...{item?.seller?.slice(-4)} */}
                   </span>
                 </p>
                 <p className="text-lg font-bold mt-2">
@@ -137,28 +84,16 @@ export function NftMarketplace() {
                 )}
                 {item.seller.toLowerCase() !== accountAddress?.toLowerCase() ? (
                   <Button
-                    // onClick={() => handleBuyItem(item.tokenId, item.price)}
-                    onClick={() => buyNFT(item.tokenId, item.price)}
-                    // disabled={
-                    //   (isBuyingItem && item.tokenId.toString() === buyItemId) ||
-                    //   (isBuyItemConfirming &&
-                    //     item.tokenId.toString() === buyItemId)
-                    // }
-                    className="mt-4 w-full bg-accent-green hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    onClick={() => handleBuyNFT(item.tokenId, item.price)}
+                    disabled={isBuying}
+                    className="w-full bg-accent-green hover:bg-green-600 text-white"
                   >
-                    {"Buy Now"}
-
-                    {/* {isBuyingItem && item.tokenId.toString() === buyItemId
+                    {isBuying && item.tokenId.toString() === buyItemTokenId
                       ? "Buying..."
-                      : isBuyItemConfirming &&
-                        item.tokenId.toString() === buyItemId
-                      ? "Confirming..."
                       : "Buy Now"}
-                    {((isBuyingItem && item.tokenId.toString() === buyItemId) ||
-                      (isBuyItemConfirming &&
-                        item.tokenId.toString() === buyItemId)) && (
+                    {isBuying && item.tokenId.toString() === buyItemTokenId && (
                       <LoadingSpinner />
-                    )} */}
+                    )}
                   </Button>
                 ) : (
                   <p className="mt-4 text-center text-gray-500 text-sm">

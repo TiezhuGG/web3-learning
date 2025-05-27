@@ -1,20 +1,19 @@
-import {
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-} from "@/constants";
 import { useCallback, useState } from "react";
+import { formatEther } from "viem";
+import { toast } from "sonner";
 import {
   useAccount,
   useWriteContract,
   usePublicClient,
   type UseReadContractParameters,
 } from "wagmi";
-import { formatEther } from "viem";
-import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
-import { toast } from "sonner";
-import { useWallet } from "./useWallet";
+import {
+  RANDOM_IPFS_NFT_ABI,
+  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+} from "@/constants";
 import { useNftContext } from "@/context/NftContext";
+import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
+import { useWallet } from "./useWallet";
 
 const CONTRACT_ADDRESS = RANDOM_IPFS_NFT_CONTRACT_ADDRESS;
 const CONTRACT_ABI = RANDOM_IPFS_NFT_ABI;

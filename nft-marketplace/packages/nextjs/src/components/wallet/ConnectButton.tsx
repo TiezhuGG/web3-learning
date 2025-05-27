@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Wallet } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Wallet } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
 
 const walletIcons: Record<string, string> = {
