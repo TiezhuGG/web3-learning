@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-dark-bg">
       <header className="py-6 px-8 flex justify-between items-center bg-gray-800 shadow-lg">
-        <h1 className="text-3xl font-bold text-white">NFT Market</h1>
+        <h1 className="text-3xl font-bold text-white">Pokemon NFT Market</h1>
         <WalletConnect />
       </header>
 

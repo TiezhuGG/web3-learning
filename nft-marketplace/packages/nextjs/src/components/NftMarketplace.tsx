@@ -36,7 +36,7 @@ export function NftMarketplace() {
         <ListForm formState="cancel" />
       </div>
 
-      <h2 className="text-2xl font-semibold text-white mb-6">Items for Sale</h2>
+      <h2 className="text-2xl font-semibold text-white mb-6">NFTs for Sale</h2>
       {marketplaceNFTs.length === 0 ? (
         <p className="text-center text-gray-400">No NFTs listed for sale.</p>
       ) : (
@@ -74,7 +74,7 @@ export function NftMarketplace() {
                     {/* {item?.seller?.slice(0, 6)}...{item?.seller?.slice(-4)} */}
                   </span>
                 </p>
-                <p className="text-lg font-bold mt-2">
+                <p className="text-white text-lg font-bold mt-2">
                   Price: {formatEther(item.price)} ETH
                 </p>
                 {item.loadingMetadata && (
@@ -86,7 +86,7 @@ export function NftMarketplace() {
                   <Button
                     onClick={() => handleBuyNFT(item.tokenId, item.price)}
                     disabled={isBuying}
-                    className="w-full bg-accent-green hover:bg-green-600 text-white"
+                    className="w-full bg-accent-green hover:bg-green-600 text-white mt-2"
                   >
                     {isBuying && item.tokenId.toString() === buyItemTokenId
                       ? "Buying..."
@@ -96,7 +96,7 @@ export function NftMarketplace() {
                     )}
                   </Button>
                 ) : (
-                  <p className="mt-4 text-center text-gray-500 text-sm">
+                  <p className="mt-4 text-center text-green-500">
                     Owned by you
                   </p>
                 )}

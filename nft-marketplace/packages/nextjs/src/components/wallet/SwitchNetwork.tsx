@@ -43,7 +43,7 @@ export default function SwitchNetwork() {
                     className="w-6 h-6 rounded-full"
                   />
                 ) : (
-                  <p className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black dark:text-white rounded-full">
+                  <p className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black rounded-full">
                     {getFirstWord(currentChain?.name!)}
                   </p>
                 )}
@@ -83,7 +83,7 @@ export default function SwitchNetwork() {
                       className="w-6 h-6 rounded-full"
                     />
                   ) : (
-                    <p className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black dark:text-white rounded-full">
+                    <p className="w-[24px] h-[24px] inline-flex justify-center items-center bg-gray-100 text-black rounded-full">
                       {getFirstWord(chain.name)}
                     </p>
                   )}

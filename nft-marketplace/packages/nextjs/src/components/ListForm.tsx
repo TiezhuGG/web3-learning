@@ -74,7 +74,7 @@ export default function ListForm({ formState }: { formState?: string }) {
               [e.target.name]: e.target.value,
             })
           }
-          className="w-full p-2 mb-3 border border-gray-600 rounded"
+          className="w-full text-white p-2 mb-3 border border-gray-600 rounded"
         />
 
         {formState !== "cancel" && (
@@ -91,7 +91,7 @@ export default function ListForm({ formState }: { formState?: string }) {
                 [e.target.name]: e.target.value,
               })
             }
-            className="w-full p-2 mb-4 border border-gray-600 rounded"
+            className="w-full text-white p-2 mb-4 border border-gray-600 rounded"
           />
         )}
       </div>

@@ -88,7 +88,7 @@ export function useMarketplace() {
       const hash = await writeListItem(request);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status === "success") {
-        toast.success("list NFT success");
+        toast.success("list NFT successfully.");
       }
     },
     [address, publicClient, writeListItem, approveMarketplace]
@@ -165,7 +165,7 @@ export function useMarketplace() {
         hash,
       });
       if (receipt.status === "success") {
-        toast.success("Buy NFT successfully!");
+        toast.success("Buy NFT successfully.");
       }
     },
     [publicClient, writeBuyItem, address]
@@ -189,7 +189,7 @@ export function useMarketplace() {
     const hash = await writeWithdrawProceeds(request);
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     if (receipt.status === "success") {
-      toast.success("withdraw proceeds success");
+      toast.success("withdraw proceeds successfully.");
       refetchBalance();
       refetchProceeds();
     }
