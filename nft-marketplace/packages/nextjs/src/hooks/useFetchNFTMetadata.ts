@@ -108,7 +108,7 @@ export function useFetchNFTMetadata() {
   // 过滤已上架的tokenId
   const filterListedTokenIds = async () => {
     const listingStatus = await Promise.all(
-      Array.from({ length: Number(tokenCounter!) }, (_, i) =>
+      Array.from({ length: Number(tokenCounter!) + 1 }, (_, i) =>
         getListItem(BigInt(i))
       )
     );
@@ -116,7 +116,6 @@ export function useFetchNFTMetadata() {
     const listedTokenIds = listingStatus
       .map((listingItem, i) => (listingItem.price > 0n ? BigInt(i) : null))
       .filter(Boolean) as bigint[];
-
     return listedTokenIds;
   };
 
@@ -137,6 +136,7 @@ export function useFetchNFTMetadata() {
   };
 
   return {
+    getListItem,
     getOwnerAddress,
     getTokenUri,
     fetchDataFromIpfs,

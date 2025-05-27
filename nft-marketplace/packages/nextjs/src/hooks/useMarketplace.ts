@@ -20,9 +20,10 @@ const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
 export function useMarketplace() {
   const { address } = useNftContext();
   const { refetchBalance } = useWallet();
-  const { tokenCounter } = useNftContext();
+  const { tokenCounter, refetchTokenCounter } = useNftContext();
   const { writeContractAsync } = useWriteContract();
-  const { checkIsOwner, refetchProceeds } = useMarketplaceContext();
+  const { checkIsOwner, refetchProceeds, checkItemIsListed } =
+    useMarketplaceContext();
   const publicClient = usePublicClient();
 
   const { writeContractAsync: writeApprove, isPending: isApproving } =
@@ -33,8 +34,6 @@ export function useMarketplace() {
         if (!publicClient || !address) {
           throw new Error("Wallet not connected or client not initialized");
         }
-
-        await checkIsOwner(tokenId);
 
         // 检查当前tokenId是否已授权
         const { result } = (await publicClient.simulateContract({
@@ -47,7 +46,7 @@ export function useMarketplace() {
 
         // 未授权时调用approve函数进行授权
         if (result.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
-          console.log("Approving marketplace...", isApproving);
+          console.log("Approving marketplace...");
 
           const { request } = await publicClient.simulateContract({
             address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
@@ -64,7 +63,7 @@ export function useMarketplace() {
         throw new Error("Failed to approve marketplace.");
       }
     },
-    [address, writeContractAsync, publicClient, tokenCounter]
+    [address, writeContractAsync, publicClient, tokenCounter, checkIsOwner]
   );
 
   const { writeContractAsync: writeListItem, isPending: isListing } =
@@ -76,6 +75,8 @@ export function useMarketplace() {
         throw new Error("Public client is not initialized.");
       }
 
+      await checkItemIsListed(tokenId);
+      await checkIsOwner(tokenId);
       await approveMarketplace(tokenId);
 
       const { request } = await publicClient.simulateContract({
@@ -89,9 +90,17 @@ export function useMarketplace() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status === "success") {
         toast.success("list NFT successfully.");
+        await refetchTokenCounter();
       }
     },
-    [address, publicClient, writeListItem, approveMarketplace]
+    [
+      address,
+      publicClient,
+      writeListItem,
+      approveMarketplace,
+      checkItemIsListed,
+      refetchTokenCounter
+    ]
   );
 
   const { writeContractAsync: writeUpdateItem, isPending: isUpdating } =

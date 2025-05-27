@@ -21,6 +21,7 @@ interface MarketplaceContextType {
   proceeds: bigint;
   refetchProceeds: () => void;
   checkIsOwner: (tokenId: bigint) => Promise<void>;
+  checkItemIsListed: (tokenId: bigint) => Promise<void>;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextType>(
@@ -35,8 +36,12 @@ export function MarketplaceProvider({
   const publicClient = usePublicClient();
   const { refetchBalance } = useWallet();
   const { address, tokenCounter, refetchMyNFTCount } = useNftContext();
-  const { getOwnerAddress, filterListedTokenIds, fetchMarketData } =
-    useFetchNFTMetadata();
+  const {
+    getOwnerAddress,
+    filterListedTokenIds,
+    fetchMarketData,
+    getListItem,
+  } = useFetchNFTMetadata();
 
   const [marketplaceNFTs, setMarketplaceNFTs] = useState<MarketplaceNft[]>([]);
 
@@ -68,6 +73,18 @@ export function MarketplaceProvider({
       }
     },
     [address, tokenCounter, getOwnerAddress]
+  );
+
+  // 检查是否已上架
+  const checkItemIsListed = useCallback(
+    async (tokenId: bigint) => {
+      const listItem = await getListItem(tokenId);
+      if (listItem.price > 0n) {
+        toast.error("NFT already listed.");
+        throw new Error("NFT already listed.");
+      }
+    },
+    [getListItem]
   );
 
   const fetchMarketNFTs = useCallback(async () => {
@@ -126,6 +143,7 @@ export function MarketplaceProvider({
     proceeds,
     refetchProceeds,
     checkIsOwner,
+    checkItemIsListed,
   };
 
   return (

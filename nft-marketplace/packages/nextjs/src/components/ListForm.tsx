@@ -30,21 +30,13 @@ export default function ListForm({ formState }: { formState?: string }) {
   const handleActions = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setFormData(initialFormData);
-      if (formState === "update") {
-        await updateNFT(BigInt(formData.tokenId), parseEther(formData.price));
-      } else if (formState === "cancel") {
-        await cancelNFT(BigInt(formData.tokenId));
-      } else {
-        await listNFT(BigInt(formData.tokenId), parseEther(formData.price));
-      }
-    } catch (error) {
-      console.error(error);
-      setFormData({
-        tokenId: formData.tokenId,
-        price: formData.price,
-      });
+    setFormData(initialFormData);
+    if (formState === "update") {
+      await updateNFT(BigInt(formData.tokenId), parseEther(formData.price));
+    } else if (formState === "cancel") {
+      await cancelNFT(BigInt(formData.tokenId));
+    } else {
+      await listNFT(BigInt(formData.tokenId), parseEther(formData.price));
     }
   };
 

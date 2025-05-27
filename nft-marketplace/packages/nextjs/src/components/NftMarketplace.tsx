@@ -22,8 +22,12 @@ export function NftMarketplace() {
         <p className="text-center text-gray-400">No NFTs listed for sale.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {marketplaceNFTs.map((item) => (
-            <NftCard nft={item} showMarketInfo={true} />
+          {marketplaceNFTs.map((nft) => (
+            <NftCard
+              key={nft.tokenId.toString()}
+              nft={nft}
+              showMarketInfo={true}
+            />
           ))}
         </div>
       )}
