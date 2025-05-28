@@ -29,9 +29,14 @@ const metadataTemplate = {
 let tokenUris = [
   "ipfs://QmQU5yjBnKYpVixgSAFYcKGMVSikE8hJBLM6AkrTECRMRx",
   "ipfs://QmNQ2xdK1R8esBWLXJfnwexucr9UvKvqH1ZnM7o9qJLmNn",
+  "ipfs://Qmc2xTdoY1NWryExnsgh8Mjk6QSpWj8nEKFikNYqXjMG1S",
   "ipfs://QmTaWXWkvK6KqDj97FG4GRkXqcbDTTbDQnfiVuHQcV4ZCF",
   "ipfs://QmbpbjD5P4f3rRtVMS3ZYGR5sKbhuKHKdVPsH84qorgnZj",
-  "ipfs://Qmc2xTdoY1NWryExnsgh8Mjk6QSpWj8nEKFikNYqXjMG1S",
+  "ipfs://QmcgxHB8iWCyDmCKXTdt71anRc1Z6turngkdffWXzHYFpb",
+  "ipfs://Qmf8KgPqrYWVtt3rhf2zVLS6sCuSYaoWDC6h8UM7i1FaNf",
+  "ipfs://QmVRdWAfkE9r8sNXwGMMfGAdNoCvnbmMG4YBuxKREQtpSK",
+  "ipfs://QmUaAyRMHnDoUXEEvMUR4jWLFLbq87GEfKi65Px25TzDM1",
+  "ipfs://QmVYfqu4pJpsh6swxP9r8gjHh18HwYdwY847qFbyRuxKB7",
 ];
 
 
