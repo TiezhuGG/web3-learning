@@ -43,48 +43,48 @@ return requestNftData?.result;
 }
 ```
 
-#### 如果没有返回 requestId 则需解码事件日志
+#### 如果requestNft函数没有返回 requestId 则需解码事件日志
 
 ```js
 const getRequestIdByDecodeLog = async () => {
-const hash = await writeContractAsync({
-    address: requestNftAddress,
-    abi: requestNftAbi,
+  const hash = await writeContractAsync({
+    address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+    abi: RANDOM_IPFS_NFT_ABI,
     functionName: "requestNft",
     value: mintFee,
-});
+  });
 
-const receipt = await publicClient?.waitForTransactionReceipt({
+  const receipt = await publicClient?.waitForTransactionReceipt({
     hash,
-});
+  });
 
-const requestNftLog = receipt?.logs.find((log) => {
+  const requestNftLog = receipt?.logs.find((log) => {
     try {
-    const result = decodeEventLog({
-        abi: requestNftAbi,
+      const result = decodeEventLog({
+        abi: RANDOM_IPFS_NFT_ABI,
         data: log.data,
         topics: log.topics,
-    });
-    return result.eventName === "NFTRequested";
+      });
+      return result.eventName === "NFTRequested";
     } catch (error) {
-    return false;
+      return false;
     }
-});
+  });
 
-if (!requestNftLog) {
+  if (!requestNftLog) {
     throw new Error("No requestNftLog found");
-}
+  }
 
-const decodedLog = decodeEventLog({
-    abi: requestNftAbi,
+  const decodedLog = decodeEventLog({
+    abi: RANDOM_IPFS_NFT_ABI,
     data: requestNftLog.data,
     topics: requestNftLog.topics,
-}) as unknown as NFTRequestedEvent;
+  }) as unknown as NFTRequestedEvent;
 
-const { requestId } = decodedLog.args;
+  const { requestId } = decodedLog.args;
 
-return requestId;
-}
+  return requestId;
+};
 ```
 
 #### 最后需要调用 Mock 合约中的 fulfillRandomWords 函数
@@ -109,7 +109,7 @@ const requestFulfillRandomWords = async (requestId: bigint) => {
 };
 ```
 
-#### 本地链：chainId为31337时，调用模拟函数获取requestId并调用 fulfillRandomWords 函数
+#### 本地链：chainId 为 31337 时，调用模拟函数获取 requestId 并调用 fulfillRandomWords 函数
 
 ```js
 if (chainId == 31337) {
@@ -117,4 +117,39 @@ if (chainId == 31337) {
     const result = await requestFulfillRandomWords(requestId!);
     ...
 }
+```
+
+#### 监听NFTMinted事件（方便进行后续操作）
+```js
+useEffect(() => {
+  let unwatch: WatchContractEventReturnType | undefined;
+
+  const setEventWatcher = async () => {
+    // 获取当前区块号
+    const latestBlockNumber = await publicClient?.getBlockNumber();
+    if (!latestBlockNumber) return;
+
+    // 监听NFT铸造成功的NFTMinted事件
+    unwatch = publicClient?.watchContractEvent({
+      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+      abi: RANDOM_IPFS_NFT_ABI,
+      eventName: "NFTMinted",
+      fromBlock: latestBlockNumber + 1n, // 从最新区块号开始监听，避免重复监听历史事件
+      onLogs: async (logs) => {
+        console.log("NFTMinted event args:", logs);
+        const { data: newTokenCounter } = await refetchTokenCounter();
+        setLastMintedTokenId(
+          typeof newTokenCounter === "bigint"
+            ? newTokenCounter - 1n
+            : undefined
+        );
+        toast.success("Mint NFT successfully.");
+      },
+    });
+  };
+
+  setEventWatcher();
+
+  return () => unwatch!();
+}, [publicClient, setLastMintedTokenId]);
 ```
