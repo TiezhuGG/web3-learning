@@ -55,15 +55,14 @@ export function useMintRandomNFT() {
     }
 
     try {
+      setIsMinting(true);
+
       // 本地链模拟Chainlink VRF
       if (chainId == 31337) {
-        setIsMinting(true);
-
         const requestId = await getRequestIdBySimulate();
         const result = await requestFulfillRandomWords(requestId!);
         if (result) {
           refetchBalance();
-          setIsMinting(false);
           const { data: newTokenCounter } = await refetchTokenCounter();
           setLastMintedTokenId(
             typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
@@ -80,20 +79,34 @@ export function useMintRandomNFT() {
         functionName: "requestNft",
         value: mintFee,
       });
-
+      
+      toast.info("Minting request sent. Please Waiting...");
+      refetchBalance(); // 刷新余额,mintFee已支付
+      
       const receipt = await publicClient?.waitForTransactionReceipt({ hash });
       if (receipt?.status === "success") {
-        refetchBalance();
-        setIsMinting(false);
-        const { data: newTokenCounter } = await refetchTokenCounter();
-        setLastMintedTokenId(
-          typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
-        );
-        toast.success("Mint NFT successfully.");
+        console.log("NFT request transaction confirmed:", receipt);
+        // 监听NFT铸造成功的NFTMinted事件 
+        publicClient?.watchContractEvent({
+          address: CONTRACT_ADDRESS,
+          abi: CONTRACT_ABI,
+          eventName: "NFTMinted",
+          onLogs: async (logs) => {
+            const { args } = (logs[0] as any).args;
+            console.log('NFTMinted event args:', args);
+            const { data: newTokenCounter } = await refetchTokenCounter();
+            setLastMintedTokenId(
+              typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
+            );
+            toast.success("Mint NFT successfully.");
+          }
+        })
       }
     } catch (error) {
+      toast.error('Failed to mint NFT.')
+      throw error;
+    } finally {
       setIsMinting(false);
-      throw new Error("Failed to mint NFT");
     }
   }, [
     address,
@@ -103,6 +116,8 @@ export function useMintRandomNFT() {
     publicClient,
     refetchTokenCounter,
     writeContractAsync,
+    getRequestIdBySimulate,
+    requestFulfillRandomWords
   ]);
 
   return {
