@@ -13,7 +13,7 @@ const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
 
 export function useFetchNFTMetadata() {
   const publicClient = usePublicClient();
-  const { address, tokenCounter } = useNftContext();
+  const { address, refetchTokenCounter } = useNftContext();
 
   // 获取owner地址
   const getOwnerAddress = async (tokenId: bigint) => {
@@ -107,8 +107,10 @@ export function useFetchNFTMetadata() {
 
   // 过滤已上架的tokenId
   const filterListedTokenIds = async () => {
+    // 确保tokenCounter是最新的
+    const {data: newestTokenCounter} = await refetchTokenCounter();
     const listingStatus = await Promise.all(
-      Array.from({ length: Number(tokenCounter!) + 1 }, (_, i) =>
+      Array.from({ length: Number(newestTokenCounter)}, (_, i) =>
         getListItem(BigInt(i))
       )
     );

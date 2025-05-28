@@ -1,11 +1,15 @@
 import { useContext, createContext } from "react";
-import { useAccount, useReadContract, type UseReadContractParameters } from "wagmi";
+import {
+  useAccount,
+  useReadContract,
+  type UseReadContractParameters,
+} from "wagmi";
 import { Address } from "viem";
 import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants/randomIpfsNft";
-import { BigintType } from "@/types";
+import { BigintType, ReRetchType } from "@/types";
 
 const randomContractConfig: UseReadContractParameters = {
   address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
@@ -17,8 +21,8 @@ interface NftContextType {
   mintFee: BigintType;
   tokenCounter: BigintType;
   myNFTCount: BigintType;
-  refetchTokenCounter: () => void;
-  refetchMyNFTCount: () => void;
+  refetchTokenCounter: () => ReRetchType;
+  refetchMyNFTCount: () => ReRetchType;
 }
 
 const NftContext = createContext<NftContextType>({} as NftContextType);

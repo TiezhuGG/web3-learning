@@ -64,7 +64,7 @@ export function useMintRandomNFT() {
         if (result) {
           refetchBalance();
           setIsMinting(false);
-          const { data: newTokenCounter } = await refetchTokenCounter()!;
+          const { data: newTokenCounter } = await refetchTokenCounter();
           setLastMintedTokenId(
             typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
           );
@@ -85,7 +85,7 @@ export function useMintRandomNFT() {
       if (receipt?.status === "success") {
         refetchBalance();
         setIsMinting(false);
-        const { data: newTokenCounter } = await refetchTokenCounter()!;
+        const { data: newTokenCounter } = await refetchTokenCounter();
         setLastMintedTokenId(
           typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
         );

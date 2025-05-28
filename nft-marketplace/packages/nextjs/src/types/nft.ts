@@ -1,5 +1,5 @@
-import { Address } from "viem";
-
+import { UseQueryResult } from "@tanstack/react-query";
+import { Address, ReadContractErrorType, ReadContractReturnType } from "viem";
 export interface Listing {
   price: bigint;
   seller: Address;
@@ -35,5 +35,7 @@ export interface NFTRequestedEvent {
     requester: string;
   };
 }
+
+export type ReRetchType = Promise<UseQueryResult<ReadContractReturnType, ReadContractErrorType>>
 
 export type BigintType = bigint | undefined;
