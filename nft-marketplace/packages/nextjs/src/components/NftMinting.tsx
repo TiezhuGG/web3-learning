@@ -7,8 +7,8 @@ import { useMarketplaceContext } from "@/context/MarketplaceContext";
 import { useMarketplace } from "@/hooks/useMarketplace";
 
 export function NftMinting() {
-  const { handleMintNFT, isMinting, lastMintedTokenId } = useMintRandomNFT();
-  const { mintFee } = useNftContext();
+  const { handleMintNFT, isMinting } = useMintRandomNFT();
+  const { mintFee,lastMintedTokenId } = useNftContext();
   const { proceeds } = useMarketplaceContext();
   const { withdrawProceeds, isWithdrawing } = useMarketplace();
 
@@ -31,7 +31,7 @@ export function NftMinting() {
           {isMinting && <LoadingSpinner />}
         </Button>
 
-        {lastMintedTokenId !== null && (
+        {lastMintedTokenId !== undefined && (
           <p className="mt-4 text-sm text-accent-green">
             🎉 Successfully Minted NFT with Token ID: {lastMintedTokenId}
           </p>

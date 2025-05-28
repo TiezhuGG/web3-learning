@@ -56,8 +56,7 @@ export function useMarketplace() {
             account: address,
           });
 
-          const hash = await writeApprove(request);
-          return hash;
+          await writeApprove(request);
         }
       } catch (error) {
         throw new Error("Failed to approve marketplace.");
@@ -122,7 +121,11 @@ export function useMarketplace() {
         account: address,
       });
 
-      await writeUpdateItem(request);
+      const hash = await writeUpdateItem(request);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (receipt.status === "success") {
+        toast.success("update NFT price successfully.");
+      }
     },
     [address, publicClient, writeUpdateItem, checkIsOwner]
   );
@@ -146,7 +149,11 @@ export function useMarketplace() {
         account: address,
       });
 
-      await writeCancelItem(request);
+      const hash = await writeCancelItem(request);
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      if (receipt.status === "success") {
+        toast.success("cancel NFT successfully.");
+      }
     },
     [address, publicClient, writeCancelItem, checkIsOwner]
   );

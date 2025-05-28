@@ -28,9 +28,6 @@ export function useMintRandomNFT() {
   const { address, chainId } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
-  const [lastMintedTokenId, setLastMintedTokenId] = useState<bigint | null>(
-    null
-  );
   const [isMinting, setIsMinting] = useState(false);
   const { mintFee, tokenCounter, refetchTokenCounter } = useNftContext();
 
@@ -60,15 +57,7 @@ export function useMintRandomNFT() {
       // 本地链模拟Chainlink VRF
       if (chainId == 31337) {
         const requestId = await getRequestIdBySimulate();
-        const result = await requestFulfillRandomWords(requestId!);
-        if (result) {
-          refetchBalance();
-          const { data: newTokenCounter } = await refetchTokenCounter();
-          setLastMintedTokenId(
-            typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
-          );
-          toast.success("Mint NFT successfully.");
-        }
+        await requestFulfillRandomWords(requestId!);
         return;
       }
 
@@ -86,21 +75,6 @@ export function useMintRandomNFT() {
       const receipt = await publicClient?.waitForTransactionReceipt({ hash });
       if (receipt?.status === "success") {
         console.log("NFT request transaction confirmed:", receipt);
-        // 监听NFT铸造成功的NFTMinted事件 
-        publicClient?.watchContractEvent({
-          address: CONTRACT_ADDRESS,
-          abi: CONTRACT_ABI,
-          eventName: "NFTMinted",
-          onLogs: async (logs) => {
-            const { args } = (logs[0] as any).args;
-            console.log('NFTMinted event args:', args);
-            const { data: newTokenCounter } = await refetchTokenCounter();
-            setLastMintedTokenId(
-              typeof newTokenCounter === "bigint" ? newTokenCounter - 1n : null
-            );
-            toast.success("Mint NFT successfully.");
-          }
-        })
       }
     } catch (error) {
       toast.error('Failed to mint NFT.')
@@ -122,7 +96,6 @@ export function useMintRandomNFT() {
 
   return {
     isMinting,
-    lastMintedTokenId,
     handleMintNFT,
   };
 }

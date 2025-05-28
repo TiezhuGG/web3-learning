@@ -108,16 +108,16 @@ export function useFetchNFTMetadata() {
   // 过滤已上架的tokenId
   const filterListedTokenIds = async () => {
     // 确保tokenCounter是最新的
-    const {data: newestTokenCounter} = await refetchTokenCounter();
+    const { data: newestTokenCounter } = await refetchTokenCounter();
     const listingStatus = await Promise.all(
-      Array.from({ length: Number(newestTokenCounter)}, (_, i) =>
+      Array.from({ length: Number(newestTokenCounter) }, (_, i) =>
         getListItem(BigInt(i))
       )
     );
 
     const listedTokenIds = listingStatus
-      .map((listingItem, i) => (listingItem.price > 0n ? BigInt(i) : null))
-      .filter(Boolean) as bigint[];
+      .map((nft, i) => (nft.price > 0n ? BigInt(i) : null))
+      .filter((v) => v !== null) as bigint[];
     return listedTokenIds;
   };
 
