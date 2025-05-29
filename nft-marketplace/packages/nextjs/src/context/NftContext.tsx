@@ -42,7 +42,7 @@ const NftContext = createContext<NftContextType>({} as NftContextType);
 export function NftProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
-  const { getOwnerAddress, fetchUserData } = useFetchNFTMetadata();
+  const { fetchOwnerAddress, fetchUserData } = useFetchNFTMetadata();
   const [lastMintedTokenId, setLastMintedTokenId] =
     useState<BigintType>(undefined);
   const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
@@ -73,18 +73,18 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     const { data: newTokenCounter } = await refetchTokenCounter();
     const results = await Promise.all(
       Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
-        const owner = await getOwnerAddress(BigInt(i));
+        const owner = await fetchOwnerAddress(BigInt(i));
         return owner === address ? await fetchUserData(BigInt(i)) : null;
       })
     );
     const filteredResults = results.filter((nft) => nft !== null) as UserNft[];
     setUserNFTs(filteredResults);
-  }, [tokenCounter, address]);
+  }, [address]);
 
   useEffect(() => {
     fetchUserNFTs();
     let unwatch: WatchContractEventReturnType | undefined;
-
+console.log('执行')
     const setEventWatcher = async () => {
       const latestBlockNumber = await publicClient?.getBlockNumber();
       if (!latestBlockNumber) return;
@@ -103,6 +103,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
               ? newTokenCounter - 1n
               : undefined
           );
+          fetchUserNFTs();
           toast.success("Mint NFT successfully.");
         },
       });
@@ -117,7 +118,6 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     publicClient,
     setLastMintedTokenId,
     fetchUserNFTs,
-    tokenCounter,
     refetchTokenCounter,
   ]);
 

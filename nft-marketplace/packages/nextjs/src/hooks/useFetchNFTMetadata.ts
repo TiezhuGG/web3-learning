@@ -14,10 +14,10 @@ const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
 
 export function useFetchNFTMetadata() {
   const publicClient = usePublicClient();
-  const { address, refetchTokenCounter } = useNftContext();
+  const { refetchTokenCounter } = useNftContext();
 
   // 获取owner地址
-  const getOwnerAddress = useCallback(
+  const fetchOwnerAddress = useCallback(
     async (tokenId: bigint) => {
       if (!publicClient) {
         throw new Error("Public client is not initialized.");
@@ -36,7 +36,7 @@ export function useFetchNFTMetadata() {
   );
 
   // 获取tokenURI
-  const getTokenUri = useCallback(
+  const fetchTokenUri = useCallback(
     async (tokenId: bigint) => {
       const tokenUri = (await publicClient?.readContract({
         address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
@@ -53,7 +53,7 @@ export function useFetchNFTMetadata() {
   // 从IPFS获取NFT元数据信息
   const fetchDataFromIpfs = useCallback(
     async (tokenId: bigint) => {
-      const tokenUri = await getTokenUri(tokenId);
+      const tokenUri = await fetchTokenUri(tokenId);
 
       if (tokenUri && tokenUri.startsWith("ipfs://")) {
         const ipfsHash = tokenUri.replace("ipfs://", "");
@@ -70,11 +70,11 @@ export function useFetchNFTMetadata() {
         };
       }
     },
-    [getTokenUri, getOwnerAddress, address]
+    [fetchTokenUri]
   );
 
   // 获取上架NFT的信息
-  const getListNFT = useCallback(
+  const fetchListing = useCallback(
     async (tokenId: bigint) => {
       const listNFT = await publicClient?.readContract({
         address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
@@ -91,7 +91,7 @@ export function useFetchNFTMetadata() {
   const fetchUserData = useCallback(
     async (tokenId: bigint) => {
       const result = await fetchDataFromIpfs(tokenId);
-      const { price } = await getListNFT(tokenId);
+      const { price } = await fetchListing(tokenId);
 
       if (result) {
         const { tokenUri, metadata } = result;
@@ -106,7 +106,7 @@ export function useFetchNFTMetadata() {
 
       return null;
     },
-    [fetchDataFromIpfs, getListNFT]
+    [fetchDataFromIpfs, fetchListing]
   );
 
   // 过滤已上架的tokenId
@@ -115,7 +115,7 @@ export function useFetchNFTMetadata() {
     const { data: newestTokenCounter } = await refetchTokenCounter();
     const listingStatus = await Promise.all(
       Array.from({ length: Number(newestTokenCounter) }, (_, i) =>
-        getListNFT(BigInt(i))
+        fetchListing(BigInt(i))
       )
     );
 
@@ -129,7 +129,7 @@ export function useFetchNFTMetadata() {
     const result = await fetchDataFromIpfs(tokenId);
     if (result) {
       const { tokenUri, metadata } = result;
-      const { price, seller } = await getListNFT(tokenId);
+      const { price, seller } = await fetchListing(tokenId);
       return {
         tokenId,
         tokenUri,
@@ -143,9 +143,8 @@ export function useFetchNFTMetadata() {
   };
 
   return {
-    getListNFT,
-    getOwnerAddress,
-    getTokenUri,
+    fetchListing,
+    fetchOwnerAddress,
     fetchDataFromIpfs,
     fetchUserData,
     fetchMarketData,

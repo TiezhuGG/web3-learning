@@ -19,7 +19,7 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   const publicClient = usePublicClient();
 
   // requestNft函数明确返回了requestId，可以使用useSimulateContract模拟获取
-  const getRequestIdBySimulate = useCallback(async () => {
+  const getRequestIdBySimulate = async () => {
     const requestNftData = await publicClient?.simulateContract({
       address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
       abi: RANDOM_IPFS_NFT_ABI,
@@ -31,10 +31,10 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
     // 需要调用requestNft检查是否需要授权
     await writeContractAsync(requestNftData?.request!);
     return requestNftData?.result;
-  }, [mintFee, address, publicClient]);
+  };
 
   // 如果没有返回requestId则需解码事件日志
-  // const getRequestIdByDecodeLog = useCallback(async () => {
+  // const getRequestIdByDecodeLog = async () => {
   //   const hash = await writeContractAsync({
   //     address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
   //     abi: RANDOM_IPFS_NFT_ABI,
@@ -72,28 +72,25 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   //   const { requestId } = decodedLog.args;
 
   //   return requestId;
-  // }, [mintFee, publicClient]);
+  // }
 
   // 手动调用 VRFCoordinatorV2_5Mock.sol 的 fulfillRandomWords
-  const requestFulfillRandomWords = useCallback(
-    async (requestId: bigint) => {
-      const hash = await writeContractAsync({
-        address: MOCK_VRF_CONTRACT_ADDRESS,
-        abi: MOCK_VRF_ABI,
-        functionName: "fulfillRandomWords",
-        args: [requestId, RANDOM_IPFS_NFT_CONTRACT_ADDRESS],
-      });
+  const requestFulfillRandomWords = async (requestId: bigint) => {
+    const hash = await writeContractAsync({
+      address: MOCK_VRF_CONTRACT_ADDRESS,
+      abi: MOCK_VRF_ABI,
+      functionName: "fulfillRandomWords",
+      args: [requestId, RANDOM_IPFS_NFT_CONTRACT_ADDRESS],
+    });
 
-      const receipt = await publicClient?.waitForTransactionReceipt({
-        hash,
-      });
+    const receipt = await publicClient?.waitForTransactionReceipt({
+      hash,
+    });
 
-      if (receipt?.status === "success") {
-        return true;
-      }
-    },
-    [publicClient]
-  );
+    if (receipt?.status === "success") {
+      return true;
+    }
+  };
 
   return {
     getRequestIdBySimulate,

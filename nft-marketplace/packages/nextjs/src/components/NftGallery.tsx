@@ -1,8 +1,8 @@
 import NftCard from "@/components/NftCard";
-import { useGallery } from "@/hooks/useGallery";
+import { useNftContext } from "@/context/NftContext";
 
 export function NftGallery() {
-  const { userNFTs } = useGallery();
+  const { userNFTs } = useNftContext();
 
   return (
     <div className="p-5 bg-card-bg rounded-lg shadow-xl border">
@@ -11,13 +11,10 @@ export function NftGallery() {
           You don't own any NFTs yet. Mint one!
         </p>
       ) : (
-        <div>
-          <h2 className="text-2xl font-semibold mb-5">Your NFTs</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {userNFTs.map((nft) => (
-              <NftCard key={nft.tokenId.toString()} nft={nft} />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {userNFTs.map((nft) => (
+            <NftCard key={nft.tokenId.toString()} nft={nft} />
+          ))}
         </div>
       )}
     </div>

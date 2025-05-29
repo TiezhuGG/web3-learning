@@ -15,7 +15,7 @@ interface WalletProps {
   chain: ChainType | undefined;
   isConnected: boolean;
   balanceData: BalanceDataProps | undefined;
-  refetchBalance: () => void;
+  refetchBalance: () => Promise<{ data: any }>;
   isConnecting: boolean;
   connectors: readonly Connector<CreateConnectorFn>[];
   connect: (args: { connector: Connector }) => void;

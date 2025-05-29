@@ -29,7 +29,7 @@ export function useMintRandomNFT() {
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [isMinting, setIsMinting] = useState(false);
-  const { mintFee, tokenCounter, refetchTokenCounter } = useNftContext();
+  const { mintFee } = useNftContext();
 
   const {
     getRequestIdBySimulate,
@@ -39,7 +39,7 @@ export function useMintRandomNFT() {
     mintFee,
   });
 
-  const handleMintNFT = useCallback(async () => {
+  const handleMintNFT = async () => {
     // 检查用户余额
     const balance = await publicClient?.getBalance({ address: address! });
     if (balance! < mintFee!) {
@@ -68,31 +68,21 @@ export function useMintRandomNFT() {
         functionName: "requestNft",
         value: mintFee,
       });
-      
+
       toast.info("Minting request sent. Please Waiting...");
       refetchBalance(); // 刷新余额,mintFee已支付
-      
+
       const receipt = await publicClient?.waitForTransactionReceipt({ hash });
       if (receipt?.status === "success") {
         console.log("NFT request transaction confirmed:", receipt);
       }
     } catch (error) {
-      toast.error('Failed to mint NFT.')
+      toast.error("Failed to mint NFT.");
       throw error;
     } finally {
       setIsMinting(false);
     }
-  }, [
-    address,
-    chainId,
-    tokenCounter,
-    mintFee,
-    publicClient,
-    refetchTokenCounter,
-    writeContractAsync,
-    getRequestIdBySimulate,
-    requestFulfillRandomWords
-  ]);
+  };
 
   return {
     isMinting,

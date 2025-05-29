@@ -37,7 +37,7 @@ export function MarketplaceProvider({
   const { refetchBalance } = useWallet();
   const { address, tokenCounter, refetchMyNFTCount, fetchUserNFTs } =
     useNftContext();
-  const { getOwnerAddress, filterListedTokenIds, fetchMarketData, getListNFT } =
+  const { fetchOwnerAddress, filterListedTokenIds, fetchMarketData, fetchListing } =
     useFetchNFTMetadata();
 
   const [marketplaceNFTs, setMarketplaceNFTs] = useState<MarketplaceNft[]>([]);
@@ -63,25 +63,25 @@ export function MarketplaceProvider({
       }
 
       // 检查当前用户是否为NFT所有者
-      const ownerAddress = await getOwnerAddress(tokenId);
+      const ownerAddress = await fetchOwnerAddress(tokenId);
       if (address!.toLowerCase() !== ownerAddress.toLowerCase()) {
         toast.error("You are not the owner of this NFT");
         throw new Error("You are not the owner of this NFT");
       }
     },
-    [address, tokenCounter, getOwnerAddress]
+    [address, tokenCounter, fetchOwnerAddress]
   );
 
   // 检查是否已上架
   const checkItemIsListed = useCallback(
     async (tokenId: bigint) => {
-      const listItem = await getListNFT(tokenId);
+      const listItem = await fetchListing(tokenId);
       if (listItem.price > 0n) {
         toast.error("NFT already listed.");
         throw new Error("NFT already listed.");
       }
     },
-    [getListNFT]
+    [fetchListing]
   );
 
   const fetchMarketNFTs = useCallback(async () => {
@@ -103,11 +103,10 @@ export function MarketplaceProvider({
       eventName: "ItemBought",
       onLogs: async (logs) => {
         console.log("监听购买事件", logs);
-        await Promise.all([
-          refetchBalance(),
-          refetchMyNFTCount(),
-          fetchMarketNFTs(),
-        ]);
+        await refetchBalance();
+        await refetchMyNFTCount();
+        await fetchMarketNFTs();
+        await fetchUserNFTs();
       },
     });
 

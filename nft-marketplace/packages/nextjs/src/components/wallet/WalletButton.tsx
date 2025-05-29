@@ -37,7 +37,13 @@ export default function WalletButton() {
             "
           >
             <p className="max-md:hidden">
-              {balanceData?.formatted} {balanceData?.symbol}
+              <span
+                title={balanceData?.formatted}
+                className="inline-block truncation max-w-[100px]"
+              >
+                {balanceData?.formatted?.replace(/(\.\d{4}).+/, "$1...")}
+              </span>
+              {balanceData?.symbol}
             </p>
             <p className="flex items-center py-1 ml-2 rounded-md">
               <span>{formatAddress(address!)}</span>
