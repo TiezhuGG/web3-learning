@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { Address } from "viem";
 import { usePublicClient } from "wagmi";
 import {
@@ -16,27 +17,27 @@ export function useFetchNFTMetadata() {
   const { address, refetchTokenCounter } = useNftContext();
 
   // 获取owner地址
-  const getOwnerAddress = async (tokenId: bigint) => {
-    if (!publicClient) {
-      throw new Error("Public client is not initialized.");
-    }
+  const getOwnerAddress = useCallback(
+    async (tokenId: bigint) => {
+      if (!publicClient) {
+        throw new Error("Public client is not initialized.");
+      }
 
-    const ownerAddress = (await publicClient?.readContract({
-      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      abi: RANDOM_IPFS_NFT_ABI,
-      functionName: "ownerOf",
-      args: [tokenId],
-    })) as Address;
+      const ownerAddress = (await publicClient?.readContract({
+        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+        abi: RANDOM_IPFS_NFT_ABI,
+        functionName: "ownerOf",
+        args: [tokenId],
+      })) as Address;
 
-    return ownerAddress;
-  };
+      return ownerAddress;
+    },
+    [publicClient]
+  );
 
   // 获取tokenURI
-  const getTokenUri = async (tokenId: bigint) => {
-    const ownerAddress = await getOwnerAddress(tokenId);
-
-    // 判断是否为NFT所有者
-    if (address?.toLowerCase() === ownerAddress?.toLowerCase()) {
+  const getTokenUri = useCallback(
+    async (tokenId: bigint) => {
       const tokenUri = (await publicClient?.readContract({
         address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
         abi: RANDOM_IPFS_NFT_ABI,
@@ -45,65 +46,68 @@ export function useFetchNFTMetadata() {
       })) as string;
 
       return tokenUri;
-    }
-  };
+    },
+    [publicClient]
+  );
 
   // 从IPFS获取NFT元数据信息
-  const fetchDataFromIpfs = async (tokenId: bigint, caller?: string) => {
-    let tokenUri;
-    if (caller === "marketplace") {
-      // 调用者是市场合约，不用判断是否为NFT所有者
-      tokenUri = (await publicClient?.readContract({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
-        functionName: "tokenURI",
-        args: [tokenId],
-      })) as string;
-    } else {
-      tokenUri = await getTokenUri(tokenId);
-    }
+  const fetchDataFromIpfs = useCallback(
+    async (tokenId: bigint) => {
+      const tokenUri = await getTokenUri(tokenId);
 
-    if (tokenUri && tokenUri.startsWith("ipfs://")) {
-      const ipfsHash = tokenUri.replace("ipfs://", "");
-      const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
-      const response = await fetch(gatewayUrl);
-      if (!response.ok) {
-        throw new Error("Failed to fetch metadata");
+      if (tokenUri && tokenUri.startsWith("ipfs://")) {
+        const ipfsHash = tokenUri.replace("ipfs://", "");
+        const gatewayUrl = `${GATEWAY_URL}${ipfsHash}`;
+        const response = await fetch(gatewayUrl);
+        if (!response.ok) {
+          throw new Error("Failed to fetch metadata");
+        }
+        const metadata: NftMetadata = await response.json();
+
+        return {
+          tokenUri,
+          metadata,
+        };
       }
-      const metadata: NftMetadata = await response.json();
+    },
+    [getTokenUri, getOwnerAddress, address]
+  );
 
-      return {
-        tokenUri,
-        metadata,
-      };
-    }
-  };
+  // 获取上架NFT的信息
+  const getListNFT = useCallback(
+    async (tokenId: bigint) => {
+      const listNFT = await publicClient?.readContract({
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
+        functionName: "getListing",
+        args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+      });
 
-  const fetchUserData = async (tokenId: bigint) => {
-    const result = await fetchDataFromIpfs(tokenId);
-    if (result) {
-      const { tokenUri, metadata } = result;
+      return listNFT as Listing;
+    },
+    [publicClient]
+  );
 
-      return {
-        tokenId,
-        tokenUri,
-        metadata,
-      };
-    }
+  const fetchUserData = useCallback(
+    async (tokenId: bigint) => {
+      const result = await fetchDataFromIpfs(tokenId);
+      const { price } = await getListNFT(tokenId);
 
-    return null;
-  };
+      if (result) {
+        const { tokenUri, metadata } = result;
 
-  const getListItem = async (tokenId: bigint) => {
-    const listItem = await publicClient?.readContract({
-      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-      abi: NFT_MARKETPLACE_NFT_ABI,
-      functionName: "getListing",
-      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
-    });
+        return {
+          tokenId,
+          tokenUri,
+          metadata,
+          price: price > 0n ? price : null, // 用来检查用户NFTs列表中哪些是已上架的
+        };
+      }
 
-    return listItem as Listing;
-  };
+      return null;
+    },
+    [fetchDataFromIpfs, getListNFT]
+  );
 
   // 过滤已上架的tokenId
   const filterListedTokenIds = async () => {
@@ -111,7 +115,7 @@ export function useFetchNFTMetadata() {
     const { data: newestTokenCounter } = await refetchTokenCounter();
     const listingStatus = await Promise.all(
       Array.from({ length: Number(newestTokenCounter) }, (_, i) =>
-        getListItem(BigInt(i))
+        getListNFT(BigInt(i))
       )
     );
 
@@ -122,11 +126,10 @@ export function useFetchNFTMetadata() {
   };
 
   const fetchMarketData = async (tokenId: bigint) => {
-    const result = await fetchDataFromIpfs(tokenId, "marketplace");
+    const result = await fetchDataFromIpfs(tokenId);
     if (result) {
       const { tokenUri, metadata } = result;
-      const { price, seller } = await getListItem(tokenId);
-
+      const { price, seller } = await getListNFT(tokenId);
       return {
         tokenId,
         tokenUri,
@@ -135,10 +138,12 @@ export function useFetchNFTMetadata() {
         seller: seller,
       };
     }
+
+    return null;
   };
 
   return {
-    getListItem,
+    getListNFT,
     getOwnerAddress,
     getTokenUri,
     fetchDataFromIpfs,

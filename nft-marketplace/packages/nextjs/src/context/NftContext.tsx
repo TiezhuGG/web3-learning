@@ -1,4 +1,10 @@
-import { useContext, createContext, useEffect, useState } from "react";
+import {
+  useContext,
+  createContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import {
   useAccount,
   usePublicClient,
@@ -10,8 +16,9 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants/randomIpfsNft";
-import { BigintType, ReRetchType } from "@/types";
+import { BigintType, ReRetchType, UserNft } from "@/types";
 import { toast } from "sonner";
+import { useFetchNFTMetadata } from "@/hooks/useFetchNFTMetadata";
 
 const randomContractConfig: UseReadContractParameters = {
   address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
@@ -24,6 +31,8 @@ interface NftContextType {
   tokenCounter: BigintType;
   myNFTCount: BigintType;
   lastMintedTokenId: BigintType;
+  userNFTs: UserNft[];
+  fetchUserNFTs: () => Promise<void>;
   refetchTokenCounter: () => ReRetchType;
   refetchMyNFTCount: () => ReRetchType;
 }
@@ -33,10 +42,47 @@ const NftContext = createContext<NftContextType>({} as NftContextType);
 export function NftProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
+  const { getOwnerAddress, fetchUserData } = useFetchNFTMetadata();
   const [lastMintedTokenId, setLastMintedTokenId] =
     useState<BigintType>(undefined);
+  const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
+
+  const { data: mintFee } = useReadContract({
+    ...randomContractConfig,
+    functionName: "getMintFee",
+    query: {
+      enabled: !!randomContractConfig.address,
+    },
+  });
+
+  const { data: tokenCounter, refetch: refetchTokenCounter } = useReadContract({
+    ...randomContractConfig,
+    functionName: "getTokenCounter",
+    query: {
+      enabled: !!randomContractConfig.address,
+    },
+  });
+
+  const { data: myNFTCount, refetch: refetchMyNFTCount } = useReadContract({
+    ...randomContractConfig,
+    functionName: "balanceOf",
+    args: [address!],
+  });
+
+  const fetchUserNFTs = useCallback(async () => {
+    const { data: newTokenCounter } = await refetchTokenCounter();
+    const results = await Promise.all(
+      Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
+        const owner = await getOwnerAddress(BigInt(i));
+        return owner === address ? await fetchUserData(BigInt(i)) : null;
+      })
+    );
+    const filteredResults = results.filter((nft) => nft !== null) as UserNft[];
+    setUserNFTs(filteredResults);
+  }, [tokenCounter, address]);
 
   useEffect(() => {
+    fetchUserNFTs();
     let unwatch: WatchContractEventReturnType | undefined;
 
     const setEventWatcher = async () => {
@@ -64,39 +110,27 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
 
     setEventWatcher();
 
-    return () => unwatch!();
-  }, [publicClient, setLastMintedTokenId]);
-
-  const { data: mintFee } = useReadContract({
-    ...randomContractConfig,
-    functionName: "getMintFee",
-    query: {
-      enabled: !!randomContractConfig.address,
-    },
-  });
-
-  const { data: tokenCounter, refetch: refetchTokenCounter } = useReadContract({
-    ...randomContractConfig,
-    functionName: "getTokenCounter",
-    query: {
-      enabled: !!randomContractConfig.address,
-    },
-  });
-
-  const { data: myNFTCount, refetch: refetchMyNFTCount } = useReadContract({
-    ...randomContractConfig,
-    functionName: "balanceOf",
-    args: [address!],
-  });
+    return () => {
+      if (unwatch) unwatch!();
+    };
+  }, [
+    publicClient,
+    setLastMintedTokenId,
+    fetchUserNFTs,
+    tokenCounter,
+    refetchTokenCounter,
+  ]);
 
   const value = {
     address,
     mintFee: mintFee as BigintType,
     tokenCounter: tokenCounter as BigintType,
     myNFTCount: myNFTCount as BigintType,
+    userNFTs,
     lastMintedTokenId,
     refetchTokenCounter,
     refetchMyNFTCount,
+    fetchUserNFTs,
   };
 
   return <NftContext.Provider value={value}>{children}</NftContext.Provider>;

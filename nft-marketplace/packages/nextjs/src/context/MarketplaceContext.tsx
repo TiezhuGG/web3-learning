@@ -35,13 +35,10 @@ export function MarketplaceProvider({
 }) {
   const publicClient = usePublicClient();
   const { refetchBalance } = useWallet();
-  const { address, tokenCounter, refetchMyNFTCount } = useNftContext();
-  const {
-    getOwnerAddress,
-    filterListedTokenIds,
-    fetchMarketData,
-    getListItem,
-  } = useFetchNFTMetadata();
+  const { address, tokenCounter, refetchMyNFTCount, fetchUserNFTs } =
+    useNftContext();
+  const { getOwnerAddress, filterListedTokenIds, fetchMarketData, getListNFT } =
+    useFetchNFTMetadata();
 
   const [marketplaceNFTs, setMarketplaceNFTs] = useState<MarketplaceNft[]>([]);
 
@@ -78,13 +75,13 @@ export function MarketplaceProvider({
   // 检查是否已上架
   const checkItemIsListed = useCallback(
     async (tokenId: bigint) => {
-      const listItem = await getListItem(tokenId);
+      const listItem = await getListNFT(tokenId);
       if (listItem.price > 0n) {
         toast.error("NFT already listed.");
         throw new Error("NFT already listed.");
       }
     },
-    [getListItem]
+    [getListNFT]
   );
 
   const fetchMarketNFTs = useCallback(async () => {
@@ -106,9 +103,11 @@ export function MarketplaceProvider({
       eventName: "ItemBought",
       onLogs: async (logs) => {
         console.log("监听购买事件", logs);
-        refetchBalance();
-        refetchMyNFTCount();
-        fetchMarketNFTs();
+        await Promise.all([
+          refetchBalance(),
+          refetchMyNFTCount(),
+          fetchMarketNFTs(),
+        ]);
       },
     });
 
@@ -118,7 +117,8 @@ export function MarketplaceProvider({
       eventName: "ItemListed",
       onLogs: async (logs) => {
         console.log("监听上架事件", logs);
-        fetchMarketNFTs();
+        await fetchMarketNFTs();
+        await fetchUserNFTs();
       },
     });
 
@@ -128,15 +128,16 @@ export function MarketplaceProvider({
       eventName: "ItemCanceled",
       onLogs: async (logs) => {
         console.log("监听取消事件", logs);
-        fetchMarketNFTs();
+        await fetchMarketNFTs();
+        await fetchUserNFTs();
       },
     });
     return () => {
-      unWatchItemBought!();
-      unWatchItemListed!();
-      unWatchItemCanceled!();
+      if (unWatchItemBought) unWatchItemBought();
+      if (unWatchItemListed) unWatchItemListed();
+      if (unWatchItemCanceled) unWatchItemCanceled();
     };
-  }, [address, refetchMyNFTCount, refetchBalance]);
+  }, [address, publicClient, refetchMyNFTCount, refetchBalance]);
 
   const value = {
     marketplaceNFTs,

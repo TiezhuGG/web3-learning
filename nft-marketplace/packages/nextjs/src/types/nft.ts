@@ -15,6 +15,7 @@ export interface UserNft {
   tokenId: bigint;
   tokenUri: string;
   metadata: NftMetadata | null;
+  price?: bigint;
   loadingMetadata?: boolean;
   errorLoadingMetadata?: boolean;
 }
