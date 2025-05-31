@@ -14,9 +14,9 @@ export const RANDOM_IPFS_NFT_ABI: Abi = [
         type: "uint256",
       },
       {
-        internalType: "string[3]",
+        internalType: "string[10]",
         name: "tokenURIs",
-        type: "string[3]",
+        type: "string[10]",
       },
       {
         internalType: "uint256",
@@ -287,6 +287,19 @@ export const RANDOM_IPFS_NFT_ABI: Abi = [
     inputs: [
       {
         indexed: false,
+        internalType: "address",
+        name: "minter",
+        type: "address",
+      },
+    ],
+    name: "NFTCustomMinted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
         internalType: "enum RandomIpfsNft.Rarity",
         name: "rarity",
         type: "uint8",
@@ -430,6 +443,19 @@ export const RANDOM_IPFS_NFT_ABI: Abi = [
   {
     inputs: [
       {
+        internalType: "string",
+        name: "tokenUri",
+        type: "string",
+      },
+    ],
+    name: "customMintNft",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -451,9 +477,9 @@ export const RANDOM_IPFS_NFT_ABI: Abi = [
     name: "getChanceArray",
     outputs: [
       {
-        internalType: "uint256[3]",
+        internalType: "uint256[10]",
         name: "",
-        type: "uint256[3]",
+        type: "uint256[10]",
       },
     ],
     stateMutability: "pure",

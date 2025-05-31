@@ -95,13 +95,14 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
 
   return (
     <div className="bg-transparent border border-gray-600/50 hover:border-gray-500 rounded-lg shadow-xl overflow-hidden transform transition duration-300 hover:scale-110">
-      <Image
-        src={imageUrl}
-        alt={name}
-        height={300}
-        width={300}
-        style={{ objectFit: "cover" }} // 保持图片比例覆盖
-      />
+      <div className="relative pt-[100%] overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={name}
+          fill
+          className="object-cover border-b border-gray-700"
+        />
+      </div>
 
       <div className="px-4 py-2 text-white">
         {!showMarketInfo && (
@@ -194,7 +195,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                         onClick={() =>
                           handleListOrUpdate(nft.tokenId, "update")
                         }
-                        className="w-full text-white bg-gradient-to-r from-gray-500 via-purple-300 to-gray-500"
+                        className="w-full btn"
                         disabled={isUpdating || !newPrice}
                       >
                         {isUpdating ? "Processing..." : "Update Price"}
@@ -247,7 +248,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                     </>
                     <Button
                       onClick={() => handleListOrUpdate(nft.tokenId, "list")}
-                      className="w-full text-white bg-gradient-to-r from-gray-500 via-purple-300 to-gray-500"
+                      className="w-full btn"
                       disabled={isApproving || isListing || !newPrice}
                     >
                       {isApproving || isListing ? "Processing..." : "List NFT"}

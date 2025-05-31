@@ -83,13 +83,14 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
           return owner === address ? await fetchUserData(BigInt(i)) : null;
         })
       );
+
       const filteredResults = results.filter(
         (nft) => nft !== null
       ) as UserNft[];
       setUserNFTs(filteredResults);
     } catch (error) {
-      console.log(error);
       toast.error("Failed to fetch user NFTs");
+      throw error;
     } finally {
       setIsFetching(false);
     }
@@ -107,6 +108,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
   const fetchNewNFT = async (tokenId: bigint) => {
     const newNFT = await fetchUserData(tokenId);
     setUserNFTs((prevNFTs) => [...prevNFTs, newNFT as UserNft]);
+    await refetchMyNFTCount();
   };
 
   useEffect(() => {
@@ -119,13 +121,13 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     };
     init();
 
-    let unwatch: WatchContractEventReturnType | undefined;
+    let unWatchRandomMinted: WatchContractEventReturnType | undefined;
+    let unWatchCustomMinted: WatchContractEventReturnType | undefined;
     const setEventWatcher = async () => {
       const latestBlockNumber = await publicClient?.getBlockNumber();
       if (!latestBlockNumber) return;
 
-      // 监听NFT铸造成功的NFTMinted事件
-      unwatch = publicClient?.watchContractEvent({
+      unWatchRandomMinted = publicClient?.watchContractEvent({
         address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
         abi: RANDOM_IPFS_NFT_ABI,
         eventName: "NFTMinted",
@@ -144,12 +146,33 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
           toast.success("Mint NFT successfully.");
         },
       });
+
+      unWatchRandomMinted = publicClient?.watchContractEvent({
+        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+        abi: RANDOM_IPFS_NFT_ABI,
+        eventName: "NFTCustomMinted",
+        fromBlock: latestBlockNumber + 1n,
+        onLogs: async (logs) => {
+          console.log("NFTCustomMinted event args:", logs);
+          const { data: newTokenCounter } = await refetchTokenCounter();
+          const newTokenId =
+            typeof newTokenCounter === "bigint"
+              ? newTokenCounter - 1n
+              : undefined;
+          if (newTokenId !== undefined) {
+            fetchNewNFT(newTokenId);
+          }
+          setLastMintedTokenId(newTokenId);
+          toast.success("Custom Mint NFT successfully.");
+        },
+      });
     };
 
     setEventWatcher();
 
     return () => {
-      if (unwatch) unwatch!();
+      if (unWatchRandomMinted) unWatchRandomMinted!();
+      if (unWatchCustomMinted) unWatchCustomMinted!();
     };
   }, [address, publicClient, setLastMintedTokenId, refetchTokenCounter]);
 

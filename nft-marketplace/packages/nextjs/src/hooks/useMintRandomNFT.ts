@@ -39,6 +39,30 @@ export function useMintRandomNFT() {
     mintFee,
   });
 
+  const handleCustomMintNFT = async (tokenUri: string) => {
+    try {
+      setIsMinting(true);
+
+      const result = await publicClient?.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "customMintNft",
+        args: [tokenUri],
+        value: mintFee,
+        account: address,
+      });
+
+      await writeContractAsync(result?.request);
+
+      refetchBalance();
+    } catch (error) {
+      toast.error("Failed to mint NFT.");
+      throw error;
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
   const handleMintNFT = async () => {
     // 检查用户余额
     const balance = await publicClient?.getBalance({ address: address! });
@@ -87,5 +111,6 @@ export function useMintRandomNFT() {
   return {
     isMinting,
     handleMintNFT,
+    handleCustomMintNFT,
   };
 }

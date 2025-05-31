@@ -10,11 +10,11 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-gray-900/50 backdrop-blur-sm border-b border-slate-800 py-2">
+    <nav className="h-[80px] flex items-center sticky top-0 z-50 bg-gray-900/50 backdrop-blur-sm border-b border-slate-800">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-3xl font-bold bg-gradient-to-r from-purple-300 to-gray-300 bg-clip-text text-transparent">
+            <span className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-200 bg-clip-text text-transparent">
               NFT Market
             </span>
           </Link>
