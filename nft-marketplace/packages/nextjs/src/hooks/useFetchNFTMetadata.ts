@@ -7,7 +7,7 @@ import {
   RANDOM_IPFS_NFT_ABI,
   RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
 } from "@/constants";
-import { Listing, NftMetadata } from "@/types";
+import { Listing, NftMetadata, UserNft } from "@/types";
 import { useNftContext } from "@/context/NftContext";
 
 const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS;
@@ -101,7 +101,7 @@ export function useFetchNFTMetadata() {
           tokenUri,
           metadata,
           price: price > 0n ? price : null, // 用来检查用户NFTs列表中哪些是已上架的
-        };
+        } as UserNft;
       }
 
       return null;

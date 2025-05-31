@@ -13,10 +13,9 @@ import { useMarketplace } from "@/hooks/useMarketplace";
 
 export default function MyCollectionPage() {
   const { handleMintNFT, isMinting } = useMintRandomNFT();
-  const { userNFTs, lastMintedTokenId } = useNftContext();
+  const { userNFTs, lastMintedTokenId, myNFTCount } = useNftContext();
   const { proceeds } = useMarketplaceContext();
   const { withdrawProceeds, isWithdrawing } = useMarketplace();
-
   const listedNFTsCount = userNFTs.filter((nft) => nft.price).length;
 
   return (
@@ -35,9 +34,7 @@ export default function MyCollectionPage() {
               <Sparkles className="w-10 h-10 text-cyan-400" />
               <div className="ml-5">
                 <p className="text-xl mb-2">Total NFTs</p>
-                <h3 className="text-2xl font-bold text-white">
-                  {userNFTs.length}
-                </h3>
+                <h3 className="text-2xl font-bold text-white">{Number(myNFTCount)}</h3>
               </div>
             </CardContent>
           </Card>

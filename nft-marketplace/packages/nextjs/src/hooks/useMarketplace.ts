@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { Address } from "viem";
 import { useWriteContract, usePublicClient } from "wagmi";
 import { toast } from "sonner";
@@ -79,11 +78,8 @@ export function useMarketplace() {
       args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId, price],
       account: address,
     });
-    const hash = await writeListItem(request);
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    if (receipt.status === "success") {
-      toast.success("list NFT successfully.");
-    }
+
+    await writeListItem(request);
   };
 
   const { writeContractAsync: writeUpdateItem, isPending: isUpdating } =
@@ -104,11 +100,7 @@ export function useMarketplace() {
       account: address,
     });
 
-    const hash = await writeUpdateItem(request);
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    if (receipt.status === "success") {
-      toast.success("update NFT price successfully.");
-    }
+    await writeUpdateItem(request);
   };
 
   const { writeContractAsync: writeCancelItem, isPending: isCanceling } =
@@ -129,11 +121,7 @@ export function useMarketplace() {
       account: address,
     });
 
-    const hash = await writeCancelItem(request);
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    if (receipt.status === "success") {
-      toast.success("cancel NFT successfully.");
-    }
+    await writeCancelItem(request);
   };
 
   const { writeContractAsync: writeBuyItem, isPending: isBuying } =
@@ -153,13 +141,7 @@ export function useMarketplace() {
       account: address,
     });
 
-    const hash = await writeBuyItem(request);
-    const receipt = await publicClient.waitForTransactionReceipt({
-      hash,
-    });
-    if (receipt.status === "success") {
-      toast.success("Buy NFT successfully.");
-    }
+    await writeBuyItem(request);
   };
 
   const {

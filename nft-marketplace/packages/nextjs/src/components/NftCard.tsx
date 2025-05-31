@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 type NftCardProps = {
   nft: UserNft | MarketplaceNft;
@@ -40,7 +41,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
   const [newPrice, setNewPrice] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleListNFT = async (tokenId: bigint) => {
+  const handleListOrUpdate = async (tokenId: bigint, action: string) => {
     if (!newPrice || Number(newPrice) < 0) {
       toast.error("Please enter a valid price");
       setNewPrice("");
@@ -48,28 +49,15 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
     }
 
     try {
-      await listNFT(BigInt(tokenId), parseEther(newPrice));
-      setNewPrice("");
+      if (action === "list") {
+        await listNFT(BigInt(tokenId), parseEther(newPrice));
+      } else if (action === "update") {
+        await updateNFT(BigInt(tokenId), parseEther(newPrice));
+      }
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to list NFT");
-    }
-  };
-
-  const handleUpdateNFT = async (tokenId: bigint) => {
-    if (!newPrice || Number(newPrice) < 0) {
-      toast.error("Please enter a valid price");
-      setNewPrice("");
-      return;
-    }
-
-    try {
-      await updateNFT(BigInt(tokenId), parseEther(newPrice));
-      setNewPrice("");
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to cancel list NFT");
+      toast.error(`Failed to ${action} NFT`);
     } finally {
+      setNewPrice("");
       setIsOpen(false);
     }
   };
@@ -92,7 +80,10 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
   };
 
   const imageUrl = nft.metadata?.image
-    ? nft.metadata.image.replace("ipfs://", "https://ipfs.io/ipfs/")
+    ? nft.metadata.image.replace(
+        "ipfs://",
+        `${process.env.NEXT_PUBLIC_GATEWAY_PINATA_CLOUD_IPFS}`
+      )
     : "/placeholder-nft.png"; // 占位符图片
   const name = nft.metadata?.name ?? "Untitled NFT";
   const description = nft.metadata?.description ?? "No description available.";
@@ -100,22 +91,29 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
   const price = "price" in nft ? nft.price : 0n;
   const seller = "seller" in nft ? nft.seller : "";
 
+  const isListed = price! > 0n; // 检查是否已上架
+
   return (
     <div className="bg-transparent border border-gray-600/50 hover:border-gray-500 rounded-lg shadow-xl overflow-hidden transform transition duration-300 hover:scale-110">
-      <img
+      <Image
         src={imageUrl}
         alt={name}
-        className="w-full object-cover border-b border-gray-700"
+        height={300}
+        width={300}
+        style={{ objectFit: "cover" }} // 保持图片比例覆盖
       />
 
       <div className="px-4 py-2 text-white">
         {!showMarketInfo && (
           <p
             className={`${
-              price ? "text-red-500" : "text-amber-500"
+              isListed ? "text-green-500" : "text-amber-500"
             } text-center`}
           >
-            {price ? "Listed" : "UnListed"}
+            {isListed ? "Listed" : "UnListed"}
+            {isListed && (
+              <span className="ml-2">Price: {formatEther(price!)}</span>
+            )}
           </p>
         )}
         <h3 className="flex justify-between font-semibold">
@@ -193,7 +191,9 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                         />
                       </>
                       <Button
-                        onClick={() => handleUpdateNFT(nft.tokenId)}
+                        onClick={() =>
+                          handleListOrUpdate(nft.tokenId, "update")
+                        }
                         className="w-full text-white bg-gradient-to-r from-gray-500 via-purple-300 to-gray-500"
                         disabled={isUpdating || !newPrice}
                       >
@@ -214,11 +214,12 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                 </Button>
               </div>
             ) : (
-              <Dialog>
+              <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     className="flex-1"
+                    onClick={() => setIsOpen(true)}
                   >
                     List
                   </Button>
@@ -245,7 +246,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                       />
                     </>
                     <Button
-                      onClick={() => handleListNFT(nft.tokenId)}
+                      onClick={() => handleListOrUpdate(nft.tokenId, "list")}
                       className="w-full text-white bg-gradient-to-r from-gray-500 via-purple-300 to-gray-500"
                       disabled={isApproving || isListing || !newPrice}
                     >

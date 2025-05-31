@@ -32,7 +32,9 @@ interface NftContextType {
   myNFTCount: BigintType;
   lastMintedTokenId: BigintType;
   userNFTs: UserNft[];
-  fetchUserNFTs: () => Promise<void>;
+  isFetching: boolean;
+  fetchUserNFTs: () => void;
+  updateUserNFT: (tokenId: bigint, newPrice?: bigint) => void;
   refetchTokenCounter: () => ReRetchType;
   refetchMyNFTCount: () => ReRetchType;
 }
@@ -46,6 +48,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
   const [lastMintedTokenId, setLastMintedTokenId] =
     useState<BigintType>(undefined);
   const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
+  const [isFetching, setIsFetching] = useState(true);
 
   const { data: mintFee } = useReadContract({
     ...randomContractConfig,
@@ -70,21 +73,53 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
   });
 
   const fetchUserNFTs = useCallback(async () => {
-    const { data: newTokenCounter } = await refetchTokenCounter();
-    const results = await Promise.all(
-      Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
-        const owner = await fetchOwnerAddress(BigInt(i));
-        return owner === address ? await fetchUserData(BigInt(i)) : null;
-      })
+    if (!address) return;
+
+    try {
+      const { data: newTokenCounter } = await refetchTokenCounter();
+      const results = await Promise.all(
+        Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
+          const owner = await fetchOwnerAddress(BigInt(i));
+          return owner === address ? await fetchUserData(BigInt(i)) : null;
+        })
+      );
+      const filteredResults = results.filter(
+        (nft) => nft !== null
+      ) as UserNft[];
+      setUserNFTs(filteredResults);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to fetch user NFTs");
+    } finally {
+      setIsFetching(false);
+    }
+  }, [address, refetchTokenCounter, fetchOwnerAddress, fetchUserData]);
+
+  const updateUserNFT = async (tokenId: bigint, newPrice?: bigint) => {
+    setUserNFTs((prevNFTs) =>
+      prevNFTs.map((nft) =>
+        nft.tokenId === tokenId ? { ...nft, price: newPrice } : nft
+      )
     );
-    const filteredResults = results.filter((nft) => nft !== null) as UserNft[];
-    setUserNFTs(filteredResults);
-  }, [address]);
+  };
+
+  // 获取最新的NFT并添加到列表中
+  const fetchNewNFT = async (tokenId: bigint) => {
+    const newNFT = await fetchUserData(tokenId);
+    setUserNFTs((prevNFTs) => [...prevNFTs, newNFT as UserNft]);
+  };
 
   useEffect(() => {
-    fetchUserNFTs();
+    const init = async () => {
+      if (!address) return;
+      setIsFetching(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await fetchUserNFTs();
+      setIsFetching(false);
+    };
+    init();
+
     let unwatch: WatchContractEventReturnType | undefined;
-console.log('执行')
     const setEventWatcher = async () => {
       const latestBlockNumber = await publicClient?.getBlockNumber();
       if (!latestBlockNumber) return;
@@ -98,12 +133,14 @@ console.log('执行')
         onLogs: async (logs) => {
           console.log("NFTMinted event args:", logs);
           const { data: newTokenCounter } = await refetchTokenCounter();
-          setLastMintedTokenId(
+          const newTokenId =
             typeof newTokenCounter === "bigint"
               ? newTokenCounter - 1n
-              : undefined
-          );
-          fetchUserNFTs();
+              : undefined;
+          if (newTokenId !== undefined) {
+            fetchNewNFT(newTokenId);
+          }
+          setLastMintedTokenId(newTokenId);
           toast.success("Mint NFT successfully.");
         },
       });
@@ -114,12 +151,7 @@ console.log('执行')
     return () => {
       if (unwatch) unwatch!();
     };
-  }, [
-    publicClient,
-    setLastMintedTokenId,
-    fetchUserNFTs,
-    refetchTokenCounter,
-  ]);
+  }, [address, publicClient, setLastMintedTokenId, refetchTokenCounter]);
 
   const value = {
     address,
@@ -128,9 +160,11 @@ console.log('执行')
     myNFTCount: myNFTCount as BigintType,
     userNFTs,
     lastMintedTokenId,
+    isFetching,
     refetchTokenCounter,
     refetchMyNFTCount,
     fetchUserNFTs,
+    updateUserNFT,
   };
 
   return <NftContext.Provider value={value}>{children}</NftContext.Provider>;

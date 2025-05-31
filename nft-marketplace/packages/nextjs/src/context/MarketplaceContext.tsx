@@ -15,6 +15,7 @@ import {
 } from "@/constants";
 import { useWallet } from "@/hooks/useWallet";
 import { MarketplaceNft } from "@/types";
+import { WatchContractEventReturnType } from "viem";
 
 interface MarketplaceContextType {
   marketplaceNFTs: MarketplaceNft[];
@@ -35,10 +36,19 @@ export function MarketplaceProvider({
 }) {
   const publicClient = usePublicClient();
   const { refetchBalance } = useWallet();
-  const { address, tokenCounter, refetchMyNFTCount, fetchUserNFTs } =
-    useNftContext();
-  const { fetchOwnerAddress, filterListedTokenIds, fetchMarketData, fetchListing } =
-    useFetchNFTMetadata();
+  const {
+    address,
+    tokenCounter,
+    refetchMyNFTCount,
+    fetchUserNFTs,
+    updateUserNFT,
+  } = useNftContext();
+  const {
+    fetchOwnerAddress,
+    filterListedTokenIds,
+    fetchMarketData,
+    fetchListing,
+  } = useFetchNFTMetadata();
 
   const [marketplaceNFTs, setMarketplaceNFTs] = useState<MarketplaceNft[]>([]);
 
@@ -94,43 +104,103 @@ export function MarketplaceProvider({
     setMarketplaceNFTs(filteredResults);
   }, [filterListedTokenIds, fetchMarketData]);
 
+  const updateMarketNFT = async (nft: MarketplaceNft | null) => {
+    setMarketplaceNFTs((prevNFTs) => {
+      if (!nft) {
+        return prevNFTs;
+      }
+
+      // 检查NFT是否已在市场中售卖
+      const existingIndex = prevNFTs.findIndex(
+        (item) => item.tokenId === nft.tokenId
+      );
+
+      if (existingIndex !== -1) {
+        // NFT存在就更新
+        return prevNFTs.map((item, index) =>
+          existingIndex === index ? nft : item
+        );
+      } else {
+        // 不存在就添加
+        return [...prevNFTs, nft];
+      }
+    });
+  };
+
   useEffect(() => {
     fetchMarketNFTs();
 
-    const unWatchItemBought = publicClient?.watchContractEvent({
-      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-      abi: NFT_MARKETPLACE_NFT_ABI,
-      eventName: "ItemBought",
-      onLogs: async (logs) => {
-        console.log("监听购买事件", logs);
-        await refetchBalance();
-        await refetchMyNFTCount();
-        await fetchMarketNFTs();
-        await fetchUserNFTs();
-      },
-    });
+    let unWatchItemBought: WatchContractEventReturnType | undefined;
+    let unWatchItemListed: WatchContractEventReturnType | undefined;
+    let unWatchItemCanceled: WatchContractEventReturnType | undefined;
 
-    const unWatchItemListed = publicClient?.watchContractEvent({
-      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-      abi: NFT_MARKETPLACE_NFT_ABI,
-      eventName: "ItemListed",
-      onLogs: async (logs) => {
-        console.log("监听上架事件", logs);
-        await fetchMarketNFTs();
-        await fetchUserNFTs();
-      },
-    });
+    const setEventWatcher = async () => {
+      const latestBlockNumber = await publicClient?.getBlockNumber();
+      if (!latestBlockNumber) return;
 
-    const unWatchItemCanceled = publicClient?.watchContractEvent({
-      address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-      abi: NFT_MARKETPLACE_NFT_ABI,
-      eventName: "ItemCanceled",
-      onLogs: async (logs) => {
-        console.log("监听取消事件", logs);
-        await fetchMarketNFTs();
-        await fetchUserNFTs();
-      },
-    });
+      unWatchItemBought = publicClient?.watchContractEvent({
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
+        eventName: "ItemBought",
+        fromBlock: latestBlockNumber + 1n,
+        onLogs: async (logs) => {
+          console.log("ItemBought", logs);
+
+          const args = (logs[0] as any).args;
+          const { tokenId } = args;
+          setMarketplaceNFTs((prevNFTs) =>
+            prevNFTs.filter((nft) => nft.tokenId !== tokenId)
+          );
+          await fetchUserNFTs();
+          await refetchBalance();
+          await refetchMyNFTCount();
+          toast.success("Buy NFT successfully.");
+        },
+      });
+
+      unWatchItemListed = publicClient?.watchContractEvent({
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
+        eventName: "ItemListed",
+        fromBlock: latestBlockNumber + 1n,
+        onLogs: async (logs) => {
+          console.log("ItemListed", logs);
+
+          const args = (logs[0] as any).args;
+          const { tokenId, price } = args;
+          // 获取该NFT的完整市场数据
+          const listedNFTData = await fetchMarketData(tokenId);
+          if (listedNFTData) {
+            await updateMarketNFT(listedNFTData); // 更新到市场列表
+          }
+
+          await updateUserNFT(tokenId, price);
+          toast.success("update NFT status successfully.");
+        },
+      });
+
+      unWatchItemCanceled = publicClient?.watchContractEvent({
+        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFT_MARKETPLACE_NFT_ABI,
+        eventName: "ItemCanceled",
+        fromBlock: latestBlockNumber + 1n,
+        onLogs: async (logs) => {
+          console.log("ItemCanceled", logs);
+
+          const args = (logs[0] as any).args;
+          const { tokenId } = args;
+          setMarketplaceNFTs((prevNFTs) =>
+            prevNFTs.filter((nft) => nft.tokenId !== tokenId)
+          );
+          
+          await updateUserNFT(tokenId);
+          toast.success("unList NFT successfully.");
+        },
+      });
+    };
+
+    setEventWatcher();
+
     return () => {
       if (unWatchItemBought) unWatchItemBought();
       if (unWatchItemListed) unWatchItemListed();
