@@ -147,7 +147,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      unWatchRandomMinted = publicClient?.watchContractEvent({
+      unWatchCustomMinted = publicClient?.watchContractEvent({
         address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
         abi: RANDOM_IPFS_NFT_ABI,
         eventName: "NFTCustomMinted",

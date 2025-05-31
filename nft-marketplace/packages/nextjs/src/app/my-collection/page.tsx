@@ -34,7 +34,7 @@ export default function MyCollectionPage() {
               <Sparkles className="w-10 h-10 text-cyan-400" />
               <div className="ml-5">
                 <p className="text-xl mb-2">Total NFTs</p>
-                <h3 className="text-2xl font-bold text-white">{Number(myNFTCount)}</h3>
+                <h3 className="text-2xl font-bold text-white">{myNFTCount ? myNFTCount.toString() : 0}</h3>
               </div>
             </CardContent>
           </Card>
@@ -83,7 +83,7 @@ export default function MyCollectionPage() {
               </p>
             )}
           </div>
-          <Button onClick={handleMintNFT} disabled={isMinting}>
+          <Button variant="outline" onClick={handleMintNFT} disabled={isMinting} className="hover:scale-105">
             {isMinting ? `Minting NFT...` : "Mint Random NFT"}
             {isMinting && <LoadingSpinner />}
           </Button>

@@ -32,9 +32,9 @@ export default function WalletButton() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
+            variant="outline"
             className="h-[46px] shadow-md font-bold py-2 rounded-xl
-            transform hover:scale-105 transition-transform duration-300
-            "
+            transform hover:scale-105 transition-transform duration-300"
           >
             <p className="max-md:hidden">
               <span
@@ -52,7 +52,7 @@ export default function WalletButton() {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-gray-800/95">
           <DialogTitle />
           <div className="flex flex-col justify-center items-center">
             {chain?.icon ? (
@@ -62,7 +62,7 @@ export default function WalletButton() {
                 className="w-18 h-18 rounded-full"
               />
             ) : (
-              <p className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black dark:text-white">
+              <p className="w-[72px] h-[72px] rounded-full text-center leading-[72px] text-2xl bg-gray-100 text-black">
                 {getFirstWord(chain?.name!)}
               </p>
             )}
@@ -74,7 +74,7 @@ export default function WalletButton() {
             </div>
 
             <div className="w-full flex gap-5" onClick={handleCopyAddress}>
-              <Button className="flex-1 h-auto mt-4 py-3">
+              <Button variant="outline" className="flex-1 h-auto mt-4 py-3">
                 {copied ? (
                   <Check className="w-4 h-4" />
                 ) : (
@@ -83,6 +83,7 @@ export default function WalletButton() {
                 {copied ? "Copied" : "Copy Address"}
               </Button>
               <Button
+                variant="outline"
                 className="flex-1 h-auto mt-4 py-3"
                 onClick={() => disconnect()}
               >

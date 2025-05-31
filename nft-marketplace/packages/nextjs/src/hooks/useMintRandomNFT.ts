@@ -40,10 +40,14 @@ export function useMintRandomNFT() {
   });
 
   const handleCustomMintNFT = async (tokenUri: string) => {
+    if (!publicClient) {
+      throw new Error("Public client is not initialized.");
+    }
+
     try {
       setIsMinting(true);
 
-      const result = await publicClient?.simulateContract({
+      const { request } = await publicClient?.simulateContract({
         address: CONTRACT_ADDRESS,
         abi: CONTRACT_ABI,
         functionName: "customMintNft",
@@ -52,7 +56,7 @@ export function useMintRandomNFT() {
         account: address,
       });
 
-      await writeContractAsync(result?.request);
+      await writeContractAsync(request);
 
       refetchBalance();
     } catch (error) {
@@ -64,6 +68,7 @@ export function useMintRandomNFT() {
   };
 
   const handleMintNFT = async () => {
+    console.log("handleMintNFT");
     // 检查用户余额
     const balance = await publicClient?.getBalance({ address: address! });
     if (balance! < mintFee!) {

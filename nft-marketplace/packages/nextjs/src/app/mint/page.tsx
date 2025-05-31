@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import {
   Upload,
@@ -24,8 +23,10 @@ import { useMintRandomNFT } from "@/hooks/useMintRandomNFT";
 import { toast } from "sonner";
 import { useNftContext } from "@/context/NftContext";
 import { formatEther } from "viem";
+import { useRouter } from "next/navigation";
 
 export default function MintPage() {
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [customMetadata, setCustomMetadata] = useState({
@@ -33,14 +34,8 @@ export default function MintPage() {
     description: "",
     attributes: "",
   });
-  const [mintResult, setMintResult] = useState<{
-    imageHash?: string;
-    metadataHash?: string;
-    tokenURI?: string;
-  } | null>(null);
 
   const { uploadNFT, isUploading, uploadProgress, error, reset } = usePinata();
-
   const { handleCustomMintNFT, isMinting } = useMintRandomNFT();
   const { mintFee } = useNftContext();
 
@@ -77,7 +72,6 @@ export default function MintPage() {
       return;
     }
 
-    setMintResult(null);
     reset();
 
     try {
@@ -87,21 +81,15 @@ export default function MintPage() {
         attributes: parseAttributes(customMetadata.attributes),
       };
 
-      console.log(
-        "Metadata before upload:",
-        selectedImage,
-        metadata,
-        customMetadata.name
-      );
-
       const result = await uploadNFT(
         selectedImage,
         metadata,
         customMetadata.name
       );
 
-      setMintResult(result);
       await handleCustomMintNFT(result.tokenURI);
+
+      router.push("/my-collection");
     } catch (error) {
       toast.error(`Failed to mint custom NFT`);
       throw error;
@@ -116,7 +104,7 @@ export default function MintPage() {
       description: "",
       attributes: "",
     });
-    setMintResult(null);
+
     reset();
   };
 
@@ -158,55 +146,6 @@ export default function MintPage() {
                     </span>
                   </div>
                   <Progress value={uploadProgress.progress} className="h-2" />
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Error Display */}
-            {error && (
-              <Alert className="border-red-500/50 bg-red-500/10">
-                <AlertCircle className="w-4 h-4 text-red-400" />
-                <AlertDescription className="text-red-200">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Success Result */}
-            {mintResult && (
-              <Card className="bg-green-500/10 border-green-500/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                    <span className="text-green-400 font-medium">
-                      NFT Successfully Uploaded to IPFS!
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-gray-400">Image Hash: </span>
-                      <span className="text-green-300 font-mono">
-                        {mintResult.imageHash}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Metadata Hash: </span>
-                      <span className="text-green-300 font-mono">
-                        {mintResult.metadataHash}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Token URI: </span>
-                      <a
-                        href={mintResult.tokenURI}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline font-mono break-all"
-                      >
-                        {mintResult.tokenURI}
-                      </a>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             )}
@@ -380,7 +319,7 @@ export default function MintPage() {
                     </>
                   )}
                 </Button>
-                {(selectedImage || customMetadata.name || mintResult) && (
+                {(selectedImage || customMetadata.name) && (
                   <Button
                     onClick={resetForm}
                     variant="outline"

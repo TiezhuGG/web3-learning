@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
+import { Button } from "@/components/ui/button";
 import NftCard from "./NftCard";
 
 export function NftMarketplace() {
@@ -9,7 +11,12 @@ export function NftMarketplace() {
       <h2 className="text-3xl font-semibold mb-6">NFTs for Sale</h2>
 
       {marketplaceNFTs.length === 0 ? (
-        <p className="text-center text-gray-400">No NFTs listed for sale.</p>
+        <div className="text-center">
+          <p className="text-gray-400 mb-5">No NFTs listed for sale.</p>
+          <Button variant="outline">
+            <Link href="/my-collection">To Listed NFT</Link>
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {marketplaceNFTs.map((nft) => (

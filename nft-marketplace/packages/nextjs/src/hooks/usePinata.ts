@@ -192,12 +192,6 @@ export function usePinata(config?: UsePinataConfig) {
         const metadataHash = await uploadMetadata(completeMetadata, `${name}`);
         const tokenURI = pinata.getGatewayUrl(metadataHash);
 
-        // const result = await handleCustomMintNFT(tokenURI);
-
-        // if (!result) {
-        //   throw new Error("Failed to mint NFT");
-        // }
-
         setUploadProgress({
           stage: "complete",
           progress: 100,

@@ -1,6 +1,8 @@
 import NftCard from "@/components/NftCard";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useNftContext } from "@/context/NftContext";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function NftGallery() {
   const { userNFTs, isFetching, myNFTCount } = useNftContext();
@@ -20,9 +22,14 @@ export function NftGallery() {
 
   if (userNFTs.length === 0) {
     return (
-      <p className="text-center text-gray-400">
-        You don't own any NFTs yet. Mint one!
-      </p>
+      <div className="text-center">
+        <p className="text-gray-400 mb-5">
+          You don't own any NFTs yet. Mint one!
+        </p>
+        <Button variant="outline">
+          <Link href="/mint">Mint Custom NFT</Link>
+        </Button>
+      </div>
     );
   }
 

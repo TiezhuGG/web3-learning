@@ -30,6 +30,7 @@ export default function SwitchNetwork() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
+          variant="outline"
           className="h-[46px] shadow-md font-bold rounded-xl
             transform hover:scale-105 transition-transform duration-300"
         >
@@ -55,7 +56,7 @@ export default function SwitchNetwork() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-gray-800/95">
         <DialogTitle>Switch Network</DialogTitle>
 
         <div className="space-y-4">
@@ -69,7 +70,7 @@ export default function SwitchNetwork() {
                 className={`${
                   isConnectedChain
                     ? "text-white bg-blue-500"
-                    : "hover:bg-gray-100"
+                    : "hover:bg-gray-600"
                 } p-2 rounded-md flex justify-between items-center cursor-pointer`}
                 onClick={() => {
                   if (!isConnectedChain) handleSwitchChain(chain.id);
