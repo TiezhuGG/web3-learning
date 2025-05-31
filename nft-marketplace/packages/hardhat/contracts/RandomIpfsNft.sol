@@ -53,6 +53,7 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
 
     event NFTRequested(uint256 indexed requestId, address requester);
     event NFTMinted(Rarity rarity, address minter);
+    event NFTCustomMinted(address minter);
 
     constructor(
         address vrfCoordinatorV2_5, // VRF Coordinator地址
@@ -74,6 +75,19 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
             "Only VRFCoordinator can call"
         );
         _;
+    }
+
+    // 自定义铸造NFT
+    function customMintNft(string memory tokenUri) public payable {
+        console.log("customMintNft...", msg.value);
+        if (msg.value < i_mintFee) {
+        revert RandomIpfsNft_NeedMoreETHSent();
+        }
+        uint256 newTokenId = s_tokenCounter;
+        _safeMint(msg.sender, s_tokenCounter);
+        _setTokenURI(newTokenId, tokenUri);
+        s_tokenCounter++;
+        emit NFTCustomMinted(msg.sender);
     }
 
     // 请求NFT
@@ -169,9 +183,20 @@ contract RandomIpfsNft is VRFConsumerBaseV2Plus, ERC721URIStorage {
     function getChanceArray() public pure returns (uint256[10] memory) {
         // return [15, 15, 20, 20, MAX_CHANCE_VALUE - 70]; // 分别代表 15% 15% 20% 20% 30%的概率
         // 需要明确指定uint256类型，否则会报错
-         uint256 ten = 10;
-         uint256[10] memory chances = [ten, ten, ten, ten, ten, ten, ten, ten, ten, ten]; // 分别代表 10% 10% 10% 10% 10% 10% 10% 10% 10% 10%的概率
-         return chances;
+        uint256 ten = 10;
+        uint256[10] memory chances = [
+            ten,
+            ten,
+            ten,
+            ten,
+            ten,
+            ten,
+            ten,
+            ten,
+            ten,
+            ten
+        ]; // 分别代表 10% 10% 10% 10% 10% 10% 10% 10% 10% 10%的概率
+        return chances;
     }
 
     function getMintFee() public view returns (uint256) {
