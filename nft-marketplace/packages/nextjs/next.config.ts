@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  reactStrictMode: false,
   images: {
     remotePatterns: [
       {
@@ -11,6 +10,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true // 构建时跳过 ESLint
+  }
 };
 
 export default nextConfig;

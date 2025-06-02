@@ -2,10 +2,11 @@ import { Address } from "viem";
 import { useWriteContract, usePublicClient } from "wagmi";
 import { toast } from "sonner";
 import {
+  RANDOMIPFSNFT_ABI,
+  RANDOMIPFSNFT_CONTRACT_ADDRESS,
   NFTMARKETPLACE_ABI,
   NFTMARKETPLACE_CONTRACT_ADDRESS,
-} from "@/constants/nftMarketplace";
-import { RANDOMIPFSNFT_ABI, RANDOMIPFSNFT_CONTRACT_ADDRESS } from "@/constants";
+} from "@/constants";
 import { useNftContext } from "@/context/NftContext";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
 import { useWallet } from "./useWallet";

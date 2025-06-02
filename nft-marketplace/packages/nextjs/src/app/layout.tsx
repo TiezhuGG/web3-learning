@@ -1,10 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
-import { Inter } from "next/font/google";
-import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
@@ -13,7 +11,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <Providers>
           <Navbar />
           {children}
