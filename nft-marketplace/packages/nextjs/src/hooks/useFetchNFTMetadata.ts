@@ -76,14 +76,14 @@ export function useFetchNFTMetadata() {
   // 获取上架NFT的信息
   const fetchListing = useCallback(
     async (tokenId: bigint) => {
-      const listNFT = await publicClient?.readContract({
+      const listingNFT = await publicClient?.readContract({
         address: NFTMARKETPLACE_CONTRACT_ADDRESS,
         abi: NFTMARKETPLACE_ABI,
         functionName: "getListing",
         args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
       });
 
-      return listNFT as Listing;
+      return listingNFT as Listing;
     },
     [publicClient]
   );

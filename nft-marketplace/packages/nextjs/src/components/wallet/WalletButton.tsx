@@ -10,11 +10,15 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/useWallet";
 import { copyToClipboard, formatAddress, getFirstWord } from "./utils";
 import SwitchNetwork from "./SwitchNetwork";
+import { useMarketplaceContext } from "@/context/MarketplaceContext";
+import { useNftContext } from "@/context/NftContext";
 
 export default function WalletButton() {
   const { address, chain, balanceData, disconnect } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { fetchMarketNFTs } = useMarketplaceContext();
+  const { fetchUserNFTs } = useNftContext();
 
   const handleCopyAddress = () => {
     if (address) {
@@ -24,6 +28,12 @@ export default function WalletButton() {
         setTimeout(() => setCopied(false), 1500);
       }
     }
+  };
+
+  const handleDisconnect = async () => {
+    disconnect();
+    await fetchUserNFTs(true);
+    await fetchMarketNFTs();
   };
 
   return (
@@ -74,7 +84,11 @@ export default function WalletButton() {
             </div>
 
             <div className="w-full flex gap-5">
-              <Button variant="outline" className="flex-1 h-auto mt-4 py-3" onClick={handleCopyAddress}>
+              <Button
+                variant="outline"
+                className="flex-1 h-auto mt-4 py-3"
+                onClick={handleCopyAddress}
+              >
                 {copied ? (
                   <Check className="w-4 h-4" />
                 ) : (
@@ -85,7 +99,7 @@ export default function WalletButton() {
               <Button
                 variant="outline"
                 className="flex-1 h-auto mt-4 py-3"
-                onClick={() => disconnect()}
+                onClick={() => handleDisconnect()}
               >
                 <LogOut className="w-4 h-4" />
                 Disconnect

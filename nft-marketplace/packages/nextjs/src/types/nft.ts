@@ -37,6 +37,38 @@ export interface NFTRequestedEvent {
   };
 }
 
-export type ReRetchType = Promise<UseQueryResult<ReadContractReturnType, ReadContractErrorType>>
+export interface UsePinataConfig {
+  apiKey?: string;
+  apiSecret?: string;
+  jwt?: string;
+}
+export interface UploadProgress {
+  stage:
+    | "idle"
+    | "uploading-image"
+    | "uploading-metadata"
+    | "complete"
+    | "error";
+  progress: number;
+  message: string;
+}
+
+export interface ActionProgress {
+  stage:
+    | "idle"
+    | "approving"
+    | "listing"
+    | "updating"
+    | "unListing"
+    | "minting"
+    | "complete"
+    | "error";
+  progress: number;
+  message: string;
+}
+
+export type ReRetchType = Promise<
+  UseQueryResult<ReadContractReturnType, ReadContractErrorType>
+>;
 
 export type BigintType = bigint | undefined;

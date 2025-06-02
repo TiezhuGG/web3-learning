@@ -1,5 +1,6 @@
 "use client";
 
+import ConnectWalletPrompt from "@/components/ConnectWalletPrompt";
 import { NftMarketplace } from "@/components/NftMarketplace";
 import { useWallet } from "@/hooks/useWallet";
 
@@ -14,11 +15,7 @@ export default function Home() {
             <NftMarketplace />
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[calc(100vh-160px)]">
-            <p className="text-xl text-gray-400 mb-6">
-              Connect your wallet to explore the NFT market.
-            </p>
-          </div>
+          <ConnectWalletPrompt />
         )}
       </main>
     </div>

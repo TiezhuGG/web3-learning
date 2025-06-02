@@ -6,23 +6,7 @@ import {
   type NFTMetadata,
   validateImageFile,
 } from "@/lib/pinata";
-
-interface UsePinataConfig {
-  apiKey?: string;
-  apiSecret?: string;
-  jwt?: string;
-}
-
-interface UploadProgress {
-  stage:
-    | "idle"
-    | "uploading-image"
-    | "uploading-metadata"
-    | "complete"
-    | "error";
-  progress: number;
-  message: string;
-}
+import {UsePinataConfig, UploadProgress} from '@/types';
 
 export function usePinata(config?: UsePinataConfig) {
   const [isUploading, setIsUploading] = useState(false);
@@ -37,8 +21,8 @@ export function usePinata(config?: UsePinataConfig) {
 
   const initializePinata = useCallback(() => {
     pinata = createPinataService({
-      apiKey: process.env.NEXT_PUBLIC_PINATA_API_KEY || "",
-      apiSecret: process.env.NEXT_PUBLIC_PINATA_API_SECRET || "",
+      apiKey: process.env.PINATA_API_KEY || "",
+      apiSecret: process.env.PINATA_API_SECRET || "",
     });
 
     return true;
@@ -81,7 +65,7 @@ export function usePinata(config?: UsePinataConfig) {
         setUploadProgress({
           stage: "complete",
           progress: 100,
-          message: "Image uploaded successfully!",
+          message: "🎉 Image uploaded successfully!",
         });
 
         return response.IpfsHash;
@@ -126,7 +110,7 @@ export function usePinata(config?: UsePinataConfig) {
         setUploadProgress({
           stage: "complete",
           progress: 100,
-          message: "Metadata uploaded successfully!",
+          message: "🎉 Metadata uploaded successfully!",
         });
 
         return response.IpfsHash;
@@ -193,7 +177,7 @@ export function usePinata(config?: UsePinataConfig) {
         setUploadProgress({
           stage: "complete",
           progress: 100,
-          message: "NFT uploaded successfully!",
+          message: "🎉 NFT uploaded successfully!",
         });
 
         return {

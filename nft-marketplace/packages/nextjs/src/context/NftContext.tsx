@@ -16,7 +16,7 @@ import {
   RANDOMIPFSNFT_ABI,
   RANDOMIPFSNFT_CONTRACT_ADDRESS,
 } from "@/constants/randomIpfsNft";
-import { BigintType, ReRetchType, UserNft } from "@/types";
+import { BigintType, ReRetchType, ActionProgress, UserNft } from "@/types";
 import { toast } from "sonner";
 import { useFetchNFTMetadata } from "@/hooks/useFetchNFTMetadata";
 
@@ -30,13 +30,14 @@ interface NftContextType {
   mintFee: BigintType;
   tokenCounter: BigintType;
   myNFTCount: BigintType;
-  lastMintedTokenId: BigintType;
   userNFTs: UserNft[];
   isFetching: boolean;
-  fetchUserNFTs: () => void;
+  actionProgress: ActionProgress;
+  fetchUserNFTs: (reset?: boolean) => Promise<void>;
   updateUserNFT: (tokenId: bigint, newPrice?: bigint) => void;
   refetchTokenCounter: () => ReRetchType;
   refetchMyNFTCount: () => ReRetchType;
+  setActionProgress: (args: ActionProgress) => void;
 }
 
 const NftContext = createContext<NftContextType>({} as NftContextType);
@@ -45,10 +46,14 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { fetchOwnerAddress, fetchUserData } = useFetchNFTMetadata();
-  const [lastMintedTokenId, setLastMintedTokenId] =
-    useState<BigintType>(undefined);
+
   const [userNFTs, setUserNFTs] = useState<UserNft[]>([]);
   const [isFetching, setIsFetching] = useState(true);
+  const [actionProgress, setActionProgress] = useState<ActionProgress>({
+    stage: "idle",
+    progress: 0,
+    message: "",
+  });
 
   const { data: mintFee } = useReadContract({
     ...randomContractConfig,
@@ -72,29 +77,35 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     args: [address!],
   });
 
-  const fetchUserNFTs = useCallback(async () => {
-    if (!address) return;
+  const fetchUserNFTs = useCallback(
+    async (reset = false) => {
+      if (reset) {
+        setUserNFTs([]);
+        return;
+      }
+      
+      try {
+        const { data: newTokenCounter } = await refetchTokenCounter();
+        const results = await Promise.all(
+          Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
+            const owner = await fetchOwnerAddress(BigInt(i));
+            return owner === address ? await fetchUserData(BigInt(i)) : null;
+          })
+        );
 
-    try {
-      const { data: newTokenCounter } = await refetchTokenCounter();
-      const results = await Promise.all(
-        Array.from({ length: Number(newTokenCounter) }, async (_, i) => {
-          const owner = await fetchOwnerAddress(BigInt(i));
-          return owner === address ? await fetchUserData(BigInt(i)) : null;
-        })
-      );
-
-      const filteredResults = results.filter(
-        (nft) => nft !== null
-      ) as UserNft[];
-      setUserNFTs(filteredResults);
-    } catch (error) {
-      toast.error("Failed to fetch user NFTs");
-      throw error;
-    } finally {
-      setIsFetching(false);
-    }
-  }, [address, refetchTokenCounter, fetchOwnerAddress, fetchUserData]);
+        const filteredResults = results.filter(
+          (nft) => nft !== null
+        ) as UserNft[];
+        setUserNFTs(filteredResults);
+      } catch (error) {
+        toast.error("Failed to fetch user NFTs");
+        throw error;
+      } finally {
+        setIsFetching(false);
+      }
+    },
+    [address, refetchTokenCounter, fetchOwnerAddress, fetchUserData]
+  );
 
   const updateUserNFT = async (tokenId: bigint, newPrice?: bigint) => {
     setUserNFTs((prevNFTs) =>
@@ -115,7 +126,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     const init = async () => {
       if (!address) return;
       setIsFetching(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await fetchUserNFTs();
       setIsFetching(false);
     };
@@ -142,7 +153,11 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
           if (newTokenId !== undefined) {
             fetchNewNFT(newTokenId);
           }
-          setLastMintedTokenId(newTokenId);
+          setActionProgress({
+            stage: "complete",
+            progress: 100,
+            message: `🎉 Successfully Minted NFT with Token ID:${newTokenId}`,
+          });
           toast.success("Mint NFT successfully.");
         },
       });
@@ -162,7 +177,6 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
           if (newTokenId !== undefined) {
             fetchNewNFT(newTokenId);
           }
-          setLastMintedTokenId(newTokenId);
           toast.success("Custom Mint NFT successfully.");
         },
       });
@@ -174,7 +188,7 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
       if (unWatchRandomMinted) unWatchRandomMinted!();
       if (unWatchCustomMinted) unWatchCustomMinted!();
     };
-  }, [address, publicClient, setLastMintedTokenId, refetchTokenCounter]);
+  }, [address, publicClient, refetchTokenCounter]);
 
   const value = {
     address,
@@ -182,12 +196,13 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
     tokenCounter: tokenCounter as BigintType,
     myNFTCount: myNFTCount as BigintType,
     userNFTs,
-    lastMintedTokenId,
     isFetching,
+    actionProgress,
     refetchTokenCounter,
     refetchMyNFTCount,
     fetchUserNFTs,
     updateUserNFT,
+    setActionProgress,
   };
 
   return <NftContext.Provider value={value}>{children}</NftContext.Provider>;

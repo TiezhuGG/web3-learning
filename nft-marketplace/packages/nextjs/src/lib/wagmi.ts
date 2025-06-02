@@ -1,12 +1,12 @@
 import { createPublicClient } from "viem";
 import { http, createConfig } from "wagmi";
 import { hardhat, sepolia } from "wagmi/chains";
-// import { coinbaseWallet, walletConnect } from "wagmi/connectors";
+import { coinbaseWallet, walletConnect } from "wagmi/connectors";
 
 const SEPOLIA_RPC_URL = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL!;
 const HARDHAT_RPC_URL = process.env.NEXT_PUBLIC_HARDHAT_RPC_URL!;
-// const WALLETCONNECT_PROJECT_ID =
-//   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;
+const WALLETCONNECT_PROJECT_ID =
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!;
 
 export const publicClient = createPublicClient({
   chain: hardhat,
@@ -20,12 +20,12 @@ export const config = createConfig({
     [hardhat.id]: http(HARDHAT_RPC_URL),
   },
   connectors: [
-    // walletConnect({
-    //   projectId: WALLETCONNECT_PROJECT_ID,
-    // }),
-    // coinbaseWallet({
-    //   appName: "My Dapp",
-    // }),
+    walletConnect({
+      projectId: WALLETCONNECT_PROJECT_ID,
+    }),
+    coinbaseWallet({
+      appName: "My Dapp",
+    }),
   ],
   ssr: true,
 });

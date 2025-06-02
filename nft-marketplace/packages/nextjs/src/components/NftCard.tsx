@@ -56,6 +56,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
       }
     } catch (error) {
       toast.error(`Failed to ${action} NFT`);
+      throw error;
     } finally {
       setNewPrice("");
       setIsOpen(false);
@@ -67,6 +68,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
       await cancelNFT(BigInt(tokenId));
     } catch (error) {
       console.log(error);
+      throw error;
     }
   };
 
@@ -76,6 +78,7 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
       await buyNFT(tokenId, price);
     } catch (error) {
       setBuyItemTokenId(null);
+      throw error;
     }
   };
 

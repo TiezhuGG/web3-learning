@@ -23,6 +23,7 @@ interface MarketplaceContextType {
   refetchProceeds: () => void;
   checkIsOwner: (tokenId: bigint) => Promise<void>;
   checkItemIsListed: (tokenId: bigint) => Promise<void>;
+  fetchMarketNFTs: () => Promise<void>;
 }
 
 const MarketplaceContext = createContext<MarketplaceContextType>(
@@ -42,6 +43,7 @@ export function MarketplaceProvider({
     refetchMyNFTCount,
     fetchUserNFTs,
     updateUserNFT,
+    setActionProgress,
   } = useNftContext();
   const {
     fetchOwnerAddress,
@@ -175,6 +177,13 @@ export function MarketplaceProvider({
           }
 
           await updateUserNFT(tokenId, price);
+
+          setActionProgress({
+            stage: "complete",
+            progress: 100,
+            message: "🎉 Listing NFT to marketplace successfully.",
+          });
+          await refetchBalance();
           toast.success("update NFT status successfully.");
         },
       });
@@ -192,8 +201,15 @@ export function MarketplaceProvider({
           setMarketplaceNFTs((prevNFTs) =>
             prevNFTs.filter((nft) => nft.tokenId !== tokenId)
           );
-          
+
           await updateUserNFT(tokenId);
+
+          setActionProgress({
+            stage: "complete",
+            progress: 100,
+            message: "🎉 UnList NFT to marketplace successfully.",
+          });
+          await refetchBalance();
           toast.success("unList NFT successfully.");
         },
       });
@@ -214,6 +230,7 @@ export function MarketplaceProvider({
     refetchProceeds,
     checkIsOwner,
     checkItemIsListed,
+    fetchMarketNFTs,
   };
 
   return (

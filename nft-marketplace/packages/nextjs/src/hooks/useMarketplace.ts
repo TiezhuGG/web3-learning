@@ -5,10 +5,7 @@ import {
   NFTMARKETPLACE_ABI,
   NFTMARKETPLACE_CONTRACT_ADDRESS,
 } from "@/constants/nftMarketplace";
-import {
-  RANDOMIPFSNFT_ABI,
-  RANDOMIPFSNFT_CONTRACT_ADDRESS,
-} from "@/constants";
+import { RANDOMIPFSNFT_ABI, RANDOMIPFSNFT_CONTRACT_ADDRESS } from "@/constants";
 import { useNftContext } from "@/context/NftContext";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
 import { useWallet } from "./useWallet";
@@ -17,7 +14,7 @@ const CONTRACT_ADDRESS = NFTMARKETPLACE_CONTRACT_ADDRESS;
 const CONTRACT_ABI = NFTMARKETPLACE_ABI;
 
 export function useMarketplace() {
-  const { address } = useNftContext();
+  const { address, setActionProgress } = useNftContext();
   const { refetchBalance } = useWallet();
   const { checkIsOwner, refetchProceeds, checkItemIsListed } =
     useMarketplaceContext();
@@ -38,11 +35,17 @@ export function useMarketplace() {
         functionName: "getApproved",
         args: [tokenId],
         account: address,
-      })) as { result: Address };
+      })) as unknown as { result: Address };
 
       // 未授权时调用approve函数进行授权
       if (result.toLowerCase() !== CONTRACT_ADDRESS.toLowerCase()) {
         console.log("Approving marketplace...");
+
+        setActionProgress({
+          stage: "approving",
+          progress: 30,
+          message: "Approving marketplace...",
+        });
 
         const { request } = await publicClient.simulateContract({
           address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
@@ -67,19 +70,33 @@ export function useMarketplace() {
       throw new Error("Public client is not initialized.");
     }
 
-    await checkItemIsListed(tokenId);
-    await checkIsOwner(tokenId);
-    await approveMarketplace(tokenId);
+    try {
+      await checkItemIsListed(tokenId);
+      await checkIsOwner(tokenId);
+      await approveMarketplace(tokenId);
 
-    const { request } = await publicClient.simulateContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: "listItem",
-      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
-      account: address,
-    });
+      setActionProgress({
+        stage: "listing",
+        progress: 50,
+        message: "listing NFT to marketplace...",
+      });
 
-    await writeListItem(request);
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "listItem",
+        args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
+        account: address,
+      });
+
+      await writeListItem(request);
+    } catch (error) {
+      setActionProgress({
+        stage: "error",
+        progress: 0,
+        message: "Failed to listing NFT.",
+      });
+    }
   };
 
   const { writeContractAsync: writeUpdateItem, isPending: isUpdating } =
@@ -90,17 +107,31 @@ export function useMarketplace() {
       throw new Error("Public client is not initialized.");
     }
 
-    await checkIsOwner(tokenId);
+    try {
+      await checkIsOwner(tokenId);
 
-    const { request } = await publicClient.simulateContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: "updateListing",
-      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
-      account: address,
-    });
+      setActionProgress({
+        stage: "updating",
+        progress: 50,
+        message: "updating NFT to marketplace...",
+      });
 
-    await writeUpdateItem(request);
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "updateListing",
+        args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
+        account: address,
+      });
+
+      await writeUpdateItem(request);
+    } catch (error) {
+      setActionProgress({
+        stage: "error",
+        progress: 0,
+        message: "Failed to update NFT.",
+      });
+    }
   };
 
   const { writeContractAsync: writeCancelItem, isPending: isCanceling } =
@@ -111,17 +142,31 @@ export function useMarketplace() {
       throw new Error("Public client is not initialized.");
     }
 
-    await checkIsOwner(tokenId);
+    try {
+      await checkIsOwner(tokenId);
 
-    const { request } = await publicClient.simulateContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: "cancelListing",
-      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
-      account: address,
-    });
+      setActionProgress({
+        stage: "unListing",
+        progress: 50,
+        message: "UnListing NFT from marketplace...",
+      });
 
-    await writeCancelItem(request);
+      const { request } = await publicClient.simulateContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "cancelListing",
+        args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
+        account: address,
+      });
+
+      await writeCancelItem(request);
+    } catch (error) {
+      setActionProgress({
+        stage: "error",
+        progress: 0,
+        message: "Failed to unList NFT.",
+      });
+    }
   };
 
   const { writeContractAsync: writeBuyItem, isPending: isBuying } =

@@ -7,10 +7,7 @@ import {
   usePublicClient,
   type UseReadContractParameters,
 } from "wagmi";
-import {
-  RANDOMIPFSNFT_ABI,
-  RANDOMIPFSNFT_CONTRACT_ADDRESS,
-} from "@/constants";
+import { RANDOMIPFSNFT_ABI, RANDOMIPFSNFT_CONTRACT_ADDRESS } from "@/constants";
 import { useNftContext } from "@/context/NftContext";
 import { useChainlinkVRF2_5Mock } from "./useChainlinkVRF2_5Mock";
 import { useWallet } from "./useWallet";
@@ -29,7 +26,7 @@ export function useMintRandomNFT() {
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const [isMinting, setIsMinting] = useState(false);
-  const { mintFee } = useNftContext();
+  const { mintFee, setActionProgress } = useNftContext();
 
   const {
     getRequestIdBySimulate,
@@ -78,8 +75,6 @@ export function useMintRandomNFT() {
 
       await publicClient.waitForTransactionReceipt({ hash });
 
-      toast.info("Minting request sent. Please Waiting...");
-
       refetchBalance();
     } catch (error) {
       toast.error("Failed to mint NFT. Please try minting again.");
@@ -91,14 +86,24 @@ export function useMintRandomNFT() {
 
   const handleMintNFT = async () => {
     await checkBalance();
-    
+
     try {
       setIsMinting(true);
 
       // 本地链模拟Chainlink VRF
       if (chainId == 31337) {
         const requestId = await getRequestIdBySimulate();
+        setActionProgress({
+          stage: "minting",
+          progress: 50,
+          message: "Minting Random NFT, Please Waiting...",
+        });
         await requestFulfillRandomWords(requestId!);
+        setActionProgress({
+          stage: "minting",
+          progress: 75,
+          message: "Minting Random NFT, Please Waiting...",
+        });
         return;
       }
 
@@ -110,10 +115,20 @@ export function useMintRandomNFT() {
         value: mintFee,
       });
 
+      setActionProgress({
+        stage: "minting",
+        progress: 50,
+        message: "Minting Random NFT, Please Waiting...",
+      });
+
       toast.info("Minting request sent. Please Waiting...");
       refetchBalance(); // 刷新余额,mintFee已支付
     } catch (error) {
-      toast.error("Failed to mint NFT.");
+      setActionProgress({
+        stage: "error",
+        progress: 0,
+        message: "Failed to mint NFT...",
+      });
       throw error;
     } finally {
       setIsMinting(false);
