@@ -21,8 +21,8 @@ export function usePinata(config?: UsePinataConfig) {
 
   const initializePinata = useCallback(() => {
     pinata = createPinataService({
-      apiKey: process.env.PINATA_API_KEY || "",
-      apiSecret: process.env.PINATA_API_SECRET || "",
+      apiKey: process.env.NEXT_PUBLIC_PINATA_API_KEY || "",
+      apiSecret: process.env.NEXT_PUBLIC_PINATA_API_SECRET || "",
     });
 
     return true;
