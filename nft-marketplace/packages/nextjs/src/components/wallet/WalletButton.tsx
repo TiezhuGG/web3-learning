@@ -73,8 +73,8 @@ export default function WalletButton() {
               </p>
             </div>
 
-            <div className="w-full flex gap-5" onClick={handleCopyAddress}>
-              <Button variant="outline" className="flex-1 h-auto mt-4 py-3">
+            <div className="w-full flex gap-5">
+              <Button variant="outline" className="flex-1 h-auto mt-4 py-3" onClick={handleCopyAddress}>
                 {copied ? (
                   <Check className="w-4 h-4" />
                 ) : (

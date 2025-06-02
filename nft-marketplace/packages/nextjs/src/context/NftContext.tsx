@@ -13,16 +13,16 @@ import {
 } from "wagmi";
 import { Address, WatchContractEventReturnType } from "viem";
 import {
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+  RANDOMIPFSNFT_ABI,
+  RANDOMIPFSNFT_CONTRACT_ADDRESS,
 } from "@/constants/randomIpfsNft";
 import { BigintType, ReRetchType, UserNft } from "@/types";
 import { toast } from "sonner";
 import { useFetchNFTMetadata } from "@/hooks/useFetchNFTMetadata";
 
 const randomContractConfig: UseReadContractParameters = {
-  address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-  abi: RANDOM_IPFS_NFT_ABI,
+  address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+  abi: RANDOMIPFSNFT_ABI,
 };
 
 interface NftContextType {
@@ -128,8 +128,8 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
       if (!latestBlockNumber) return;
 
       unWatchRandomMinted = publicClient?.watchContractEvent({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
+        address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+        abi: RANDOMIPFSNFT_ABI,
         eventName: "NFTMinted",
         fromBlock: latestBlockNumber + 1n, // 从最新区块号开始监听
         onLogs: async (logs) => {
@@ -148,8 +148,8 @@ export function NftProvider({ children }: { children: React.ReactNode }) {
       });
 
       unWatchCustomMinted = publicClient?.watchContractEvent({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
+        address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+        abi: RANDOMIPFSNFT_ABI,
         eventName: "NFTCustomMinted",
         fromBlock: latestBlockNumber + 1n,
         onLogs: async (logs) => {

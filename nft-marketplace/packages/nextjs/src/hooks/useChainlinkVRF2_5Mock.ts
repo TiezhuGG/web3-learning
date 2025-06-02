@@ -4,8 +4,8 @@ import { decodeEventLog } from "viem";
 import {
   MOCK_VRF_ABI,
   MOCK_VRF_CONTRACT_ADDRESS,
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+  RANDOMIPFSNFT_ABI,
+  RANDOMIPFSNFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { BigintType, NFTRequestedEvent } from "@/types";
 
@@ -21,8 +21,8 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   // requestNft函数明确返回了requestId，可以使用useSimulateContract模拟获取
   const getRequestIdBySimulate = async () => {
     const requestNftData = await publicClient?.simulateContract({
-      address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-      abi: RANDOM_IPFS_NFT_ABI,
+      address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+      abi: RANDOMIPFSNFT_ABI,
       functionName: "requestNft",
       account: address,
       value: mintFee,
@@ -36,8 +36,8 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   // 如果没有返回requestId则需解码事件日志
   // const getRequestIdByDecodeLog = async () => {
   //   const hash = await writeContractAsync({
-  //     address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-  //     abi: RANDOM_IPFS_NFT_ABI,
+  //     address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+  //     abi: RANDOMIPFSNFT_ABI,
   //     functionName: "requestNft",
   //     value: mintFee,
   //   });
@@ -49,7 +49,7 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   //   const requestNftLog = receipt?.logs.find((log) => {
   //     try {
   //       const result = decodeEventLog({
-  //         abi: RANDOM_IPFS_NFT_ABI,
+  //         abi: RANDOMIPFSNFT_ABI,
   //         data: log.data,
   //         topics: log.topics,
   //       });
@@ -64,7 +64,7 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
   //   }
 
   //   const decodedLog = decodeEventLog({
-  //     abi: RANDOM_IPFS_NFT_ABI,
+  //     abi: RANDOMIPFSNFT_ABI,
   //     data: requestNftLog.data,
   //     topics: requestNftLog.topics,
   //   }) as unknown as NFTRequestedEvent;
@@ -80,7 +80,7 @@ export function useChainlinkVRF2_5Mock({ mintFee }: { mintFee: BigintType }) {
       address: MOCK_VRF_CONTRACT_ADDRESS,
       abi: MOCK_VRF_ABI,
       functionName: "fulfillRandomWords",
-      args: [requestId, RANDOM_IPFS_NFT_CONTRACT_ADDRESS],
+      args: [requestId, RANDOMIPFSNFT_CONTRACT_ADDRESS],
     });
 
     const receipt = await publicClient?.waitForTransactionReceipt({

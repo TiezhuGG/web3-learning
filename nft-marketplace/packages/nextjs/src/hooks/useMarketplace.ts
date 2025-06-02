@@ -2,19 +2,19 @@ import { Address } from "viem";
 import { useWriteContract, usePublicClient } from "wagmi";
 import { toast } from "sonner";
 import {
-  NFT_MARKETPLACE_NFT_ABI,
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
+  NFTMARKETPLACE_ABI,
+  NFTMARKETPLACE_CONTRACT_ADDRESS,
 } from "@/constants/nftMarketplace";
 import {
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+  RANDOMIPFSNFT_ABI,
+  RANDOMIPFSNFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { useNftContext } from "@/context/NftContext";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
 import { useWallet } from "./useWallet";
 
-const CONTRACT_ADDRESS = NFT_MARKETPLACE_CONTRACT_ADDRESS;
-const CONTRACT_ABI = NFT_MARKETPLACE_NFT_ABI;
+const CONTRACT_ADDRESS = NFTMARKETPLACE_CONTRACT_ADDRESS;
+const CONTRACT_ABI = NFTMARKETPLACE_ABI;
 
 export function useMarketplace() {
   const { address } = useNftContext();
@@ -33,8 +33,8 @@ export function useMarketplace() {
 
       // 检查当前tokenId是否已授权
       const { result } = (await publicClient.simulateContract({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
+        address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+        abi: RANDOMIPFSNFT_ABI,
         functionName: "getApproved",
         args: [tokenId],
         account: address,
@@ -45,8 +45,8 @@ export function useMarketplace() {
         console.log("Approving marketplace...");
 
         const { request } = await publicClient.simulateContract({
-          address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-          abi: RANDOM_IPFS_NFT_ABI,
+          address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+          abi: RANDOMIPFSNFT_ABI,
           functionName: "approve",
           args: [CONTRACT_ADDRESS, tokenId],
           account: address,
@@ -75,7 +75,7 @@ export function useMarketplace() {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: "listItem",
-      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId, price],
+      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
       account: address,
     });
 
@@ -96,7 +96,7 @@ export function useMarketplace() {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: "updateListing",
-      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId, price],
+      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId, price],
       account: address,
     });
 
@@ -117,7 +117,7 @@ export function useMarketplace() {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: "cancelListing",
-      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
       account: address,
     });
 
@@ -136,7 +136,7 @@ export function useMarketplace() {
       address: CONTRACT_ADDRESS,
       abi: CONTRACT_ABI,
       functionName: "buyItem",
-      args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+      args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
       value: price ?? 0n,
       account: address,
     });

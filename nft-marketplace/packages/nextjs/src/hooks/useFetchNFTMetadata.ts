@@ -2,10 +2,10 @@ import { useCallback } from "react";
 import { Address } from "viem";
 import { usePublicClient } from "wagmi";
 import {
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
-  NFT_MARKETPLACE_NFT_ABI,
-  RANDOM_IPFS_NFT_ABI,
-  RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
+  NFTMARKETPLACE_CONTRACT_ADDRESS,
+  NFTMARKETPLACE_ABI,
+  RANDOMIPFSNFT_ABI,
+  RANDOMIPFSNFT_CONTRACT_ADDRESS,
 } from "@/constants";
 import { Listing, NftMetadata, UserNft } from "@/types";
 import { useNftContext } from "@/context/NftContext";
@@ -24,8 +24,8 @@ export function useFetchNFTMetadata() {
       }
 
       const ownerAddress = (await publicClient?.readContract({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
+        address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+        abi: RANDOMIPFSNFT_ABI,
         functionName: "ownerOf",
         args: [tokenId],
       })) as Address;
@@ -39,8 +39,8 @@ export function useFetchNFTMetadata() {
   const fetchTokenUri = useCallback(
     async (tokenId: bigint) => {
       const tokenUri = (await publicClient?.readContract({
-        address: RANDOM_IPFS_NFT_CONTRACT_ADDRESS,
-        abi: RANDOM_IPFS_NFT_ABI,
+        address: RANDOMIPFSNFT_CONTRACT_ADDRESS,
+        abi: RANDOMIPFSNFT_ABI,
         functionName: "tokenURI",
         args: [tokenId],
       })) as string;
@@ -77,10 +77,10 @@ export function useFetchNFTMetadata() {
   const fetchListing = useCallback(
     async (tokenId: bigint) => {
       const listNFT = await publicClient?.readContract({
-        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-        abi: NFT_MARKETPLACE_NFT_ABI,
+        address: NFTMARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFTMARKETPLACE_ABI,
         functionName: "getListing",
-        args: [RANDOM_IPFS_NFT_CONTRACT_ADDRESS, tokenId],
+        args: [RANDOMIPFSNFT_CONTRACT_ADDRESS, tokenId],
       });
 
       return listNFT as Listing;

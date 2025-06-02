@@ -35,7 +35,7 @@ export default function MintPage() {
     attributes: "",
   });
 
-  const { uploadNFT, isUploading, uploadProgress, error, reset } = usePinata();
+  const { uploadNFT, isUploading, uploadProgress, reset } = usePinata();
   const { handleCustomMintNFT, isMinting } = useMintRandomNFT();
   const { mintFee } = useNftContext();
 
@@ -68,7 +68,7 @@ export default function MintPage() {
 
   const handleCustomMint = async () => {
     if (!selectedImage || !customMetadata.name || !customMetadata.description) {
-      alert("Please fill in all required fields and select an image");
+      toast.error("Please fill in all required fields and select an image");
       return;
     }
 
@@ -80,18 +80,17 @@ export default function MintPage() {
         description: customMetadata.description,
         attributes: parseAttributes(customMetadata.attributes),
       };
-
+      
       const result = await uploadNFT(
         selectedImage,
         metadata,
         customMetadata.name
       );
-
+      
       await handleCustomMintNFT(result.tokenURI);
 
       router.push("/my-collection");
     } catch (error) {
-      toast.error(`Failed to mint custom NFT`);
       throw error;
     }
   };
@@ -163,8 +162,8 @@ export default function MintPage() {
                       <Image
                         src={selectedImageUrl || "/placeholder.svg"}
                         alt="Selected NFT"
-                        width={200}
-                        height={200}
+                        width={280}
+                        height={280}
                         className="mx-auto rounded-lg max-h-48 object-cover"
                       />
                       <div className="text-sm text-gray-400">

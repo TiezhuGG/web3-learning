@@ -10,8 +10,8 @@ import { toast } from "sonner";
 import { useFetchNFTMetadata } from "@/hooks/useFetchNFTMetadata";
 import { usePublicClient, useReadContract } from "wagmi";
 import {
-  NFT_MARKETPLACE_CONTRACT_ADDRESS,
-  NFT_MARKETPLACE_NFT_ABI,
+  NFTMARKETPLACE_CONTRACT_ADDRESS,
+  NFTMARKETPLACE_ABI,
 } from "@/constants";
 import { useWallet } from "@/hooks/useWallet";
 import { MarketplaceNft } from "@/types";
@@ -53,8 +53,8 @@ export function MarketplaceProvider({
   const [marketplaceNFTs, setMarketplaceNFTs] = useState<MarketplaceNft[]>([]);
 
   const { data: proceedsData, refetch: refetchProceeds } = useReadContract({
-    address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-    abi: NFT_MARKETPLACE_NFT_ABI,
+    address: NFTMARKETPLACE_CONTRACT_ADDRESS,
+    abi: NFTMARKETPLACE_ABI,
     functionName: "getProceeds",
     args: [address!],
     query: {
@@ -139,8 +139,8 @@ export function MarketplaceProvider({
       if (!latestBlockNumber) return;
 
       unWatchItemBought = publicClient?.watchContractEvent({
-        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-        abi: NFT_MARKETPLACE_NFT_ABI,
+        address: NFTMARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFTMARKETPLACE_ABI,
         eventName: "ItemBought",
         fromBlock: latestBlockNumber + 1n,
         onLogs: async (logs) => {
@@ -159,8 +159,8 @@ export function MarketplaceProvider({
       });
 
       unWatchItemListed = publicClient?.watchContractEvent({
-        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-        abi: NFT_MARKETPLACE_NFT_ABI,
+        address: NFTMARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFTMARKETPLACE_ABI,
         eventName: "ItemListed",
         fromBlock: latestBlockNumber + 1n,
         onLogs: async (logs) => {
@@ -180,8 +180,8 @@ export function MarketplaceProvider({
       });
 
       unWatchItemCanceled = publicClient?.watchContractEvent({
-        address: NFT_MARKETPLACE_CONTRACT_ADDRESS,
-        abi: NFT_MARKETPLACE_NFT_ABI,
+        address: NFTMARKETPLACE_CONTRACT_ADDRESS,
+        abi: NFTMARKETPLACE_ABI,
         eventName: "ItemCanceled",
         fromBlock: latestBlockNumber + 1n,
         onLogs: async (logs) => {

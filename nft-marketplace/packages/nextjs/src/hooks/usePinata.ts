@@ -6,7 +6,6 @@ import {
   type NFTMetadata,
   validateImageFile,
 } from "@/lib/pinata";
-import { useMintRandomNFT } from "./useMintRandomNFT";
 
 interface UsePinataConfig {
   apiKey?: string;
@@ -33,7 +32,6 @@ export function usePinata(config?: UsePinataConfig) {
     message: "",
   });
   const [error, setError] = useState<string | null>(null);
-  const { handleCustomMintNFT } = useMintRandomNFT();
 
   let pinata: any = null;
 
