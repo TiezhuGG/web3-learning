@@ -10,6 +10,7 @@ import {
 import { useNftContext } from "@/context/NftContext";
 import { useMarketplaceContext } from "@/context/MarketplaceContext";
 import { useWallet } from "./useWallet";
+import { useState } from "react";
 
 const CONTRACT_ADDRESS = NFTMARKETPLACE_CONTRACT_ADDRESS;
 const CONTRACT_ABI = NFTMARKETPLACE_ABI;
@@ -20,14 +21,16 @@ export function useMarketplace() {
   const { checkIsOwner, refetchProceeds, checkItemIsListed } =
     useMarketplaceContext();
   const publicClient = usePublicClient();
+  const [isListing, setIsListing] = useState(false);
 
-  const { writeContractAsync: writeApprove, isPending: isApproving } =
-    useWriteContract();
+  const { writeContractAsync: writeApprove } = useWriteContract();
   const approveMarketplace = async (tokenId: bigint) => {
+    if (!publicClient || !address) {
+      throw new Error("Wallet not connected or client not initialized");
+    }
+
     try {
-      if (!publicClient || !address) {
-        throw new Error("Wallet not connected or client not initialized");
-      }
+      setIsListing(true);
 
       // 检查当前tokenId是否已授权
       const { result } = (await publicClient.simulateContract({
@@ -45,7 +48,7 @@ export function useMarketplace() {
         setActionProgress({
           stage: "approving",
           progress: 30,
-          message: "Approving marketplace...",
+          message: "Approving marketplace and waiting for confirmation...",
         });
 
         const { request } = await publicClient.simulateContract({
@@ -56,15 +59,37 @@ export function useMarketplace() {
           account: address,
         });
 
-        await writeApprove(request);
+        const hash = await writeApprove(request);
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        
+        if (receipt.status === "success") {
+          setActionProgress({
+            stage: "approving",
+            progress: 50,
+            message: "Approval confirmed, waiting for list...",
+          });
+          return true;
+        }
+      } else {
+        console.log("NFT already approved for marketplace.");
+        setActionProgress({
+          stage: "approving",
+          progress: 70,
+          message: "NFT already approved, proceeding to list...",
+        });
+        return true;
       }
     } catch (error) {
+      setActionProgress({
+        stage: "error",
+        progress: 0,
+        message: `Failed to approve marketplace: ${error}`,
+      });
       throw new Error("Failed to approve marketplace.");
     }
   };
 
-  const { writeContractAsync: writeListItem, isPending: isListing } =
-    useWriteContract();
+  const { writeContractAsync: writeListItem } = useWriteContract();
   // 上架NFT
   const listNFT = async (tokenId: bigint, price: bigint) => {
     if (!publicClient) {
@@ -74,11 +99,15 @@ export function useMarketplace() {
     try {
       await checkItemIsListed(tokenId);
       await checkIsOwner(tokenId);
-      await approveMarketplace(tokenId);
+      const approvalResult = await approveMarketplace(tokenId);
+
+      if (!approvalResult) {
+        throw new Error("Failed to approve marketplace.");
+      }
 
       setActionProgress({
         stage: "listing",
-        progress: 50,
+        progress: 70,
         message: "listing NFT to marketplace...",
       });
 
@@ -97,6 +126,8 @@ export function useMarketplace() {
         progress: 0,
         message: "Failed to listing NFT.",
       });
+    } finally {
+      setIsListing(false);
     }
   };
 
@@ -223,7 +254,6 @@ export function useMarketplace() {
     isCanceling,
     buyNFT,
     isBuying,
-    isApproving,
     withdrawProceeds,
     isWithdrawing,
   };

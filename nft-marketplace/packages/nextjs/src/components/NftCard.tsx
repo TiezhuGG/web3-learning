@@ -30,7 +30,6 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
     isBuying,
     listNFT,
     isListing,
-    isApproving,
     updateNFT,
     isUpdating,
     cancelNFT,
@@ -252,10 +251,10 @@ export default function NftCard({ nft, showMarketInfo = false }: NftCardProps) {
                     <Button
                       onClick={() => handleListOrUpdate(nft.tokenId, "list")}
                       className="w-full btn"
-                      disabled={isApproving || isListing || !newPrice}
+                      disabled={isListing || !newPrice}
                     >
-                      {isApproving || isListing ? "Processing..." : "List NFT"}
-                      {isApproving || (isListing && <LoadingSpinner />)}
+                      {isListing ? "Processing..." : "List NFT"}
+                      {(isListing && <LoadingSpinner />)}
                     </Button>
                   </div>
                 </DialogContent>
