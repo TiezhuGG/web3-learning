@@ -26,7 +26,7 @@ module.exports = {
     sepolia: {
       url: SEPOLIA_URL,
       chainId: 11155111,
-      accounts: [PRIVATE_KEY_1, PRIVATE_KEY_2],
+      accounts: [PRIVATE_KEY_2,PRIVATE_KEY_1],
     },
   },
   etherscan: {

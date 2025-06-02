@@ -49,7 +49,7 @@ pnpm hardhat deploy
 pnpm hardhat deploy --tags randomIpfsNft
 ```
 
-#### 使用 chainlink VRF V2.5 请求随机数
+#### 使用 chainlink VRF V2.5 请求随机数（部署到测试网或者主网时需要将该合约地址添加到chainlink VRF的Consumer中）
 
 ```solidity
 // RandomIpfsNft.sol
