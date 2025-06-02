@@ -16,6 +16,17 @@ REPORT_GAS=true pnpm hardhat test
 pnpm hardhat node
 ```
 
+### 根据.env.example文件配置环境变量
+```shell
+SEPOLIA_RPC_URL=<your_sepolia_rpc_url>
+PRIVATE_KEY=<your_private_key>
+ETHERSCAN_API_KEY=<your_etherscan_api_key>
+PINATA_API_KEY=<your_pinata_api_key>
+PINATA_API_SECRET=<your_pinata_api_secret>
+UPLOAD_TO_PINATA=false
+UPDATE_FRONT_END=true
+```
+
 ### 使用 hardhat-deploy 插件方式进行部署：
 
 需要在 hardhat.config.js 导入用到的插件
@@ -235,3 +246,4 @@ async function handleTokenUris() {
   return tokenUriList;
 }
 ```
+#### 部署时更新合约地址和ABI到前端目录下(update-frontend.js)
