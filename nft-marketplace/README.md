@@ -41,14 +41,21 @@ pnpm dev
 #### 3.前端 UI/UX (React/Next.js + Wagmi/Viem)
 
 - ##### 连接钱包
-- ##### 铸造 NFT
+- ##### 随机铸造 NFT
 
   - 显示铸造费用
-  - 发起 VRF 请求 (调用 RandomIpfsNft.requestNft)
+  - 发起 VRF 请求获取随机数 (调用 RandomIpfsNft.requestNft)
   - 监听 NFTRequested 事件，获取 requestId
   - （在本地开发环境中）手动调用 VRFCoordinatorV2_5Mock.fulfillRandomWords
   - 监听 NFTMinted 事件，获取 tokenId 和 rarity
   - 获取 NFT URI 并展示 NFT 信息
+
+- ##### 自定义铸造 NFT
+
+  - 上传图片到 IPFS 获取 imageURI
+  - 上传元数据到 IPFS 获取 tokenURI
+  - 监听 NFTCustomMinted 事件
+  - 展示 NFT 信息
 
 - ##### 展示铸造的 NFT
 
@@ -69,13 +76,15 @@ pnpm dev
   - 监听 ItemCanceled 事件
 
 - ##### 更新 NFT 列表价格 (Update Listing)
+
   - 调用 NftMarketplace.updateListing
   - 监听 ItemListed 事件 (更新也是触发这个事件)
 
 - ##### 购买 NFT (Buy Item)
-    - 显示 NFT 价格 (ETH)
-    - 调用 NftMarketplace.buyItem
-    - 监听 ItemBought 事件
+
+  - 显示 NFT 价格 (ETH)
+  - 调用 NftMarketplace.buyItem
+  - 监听 ItemBought 事件
 
 - ##### 提取收益 (Withdraw Proceeds)
   - 显示可提取收益

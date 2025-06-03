@@ -40,17 +40,17 @@ interface NFTRequestedEvent {
 
 // 若requestNft函数明确返回了requestId，可以使用useSimulateContract模拟获取
 const getRequestIdBySimulate = async () => {
-const requestNftData = await publicClient?.simulateContract({
-    address: requestNftAddress,
-    abi: requestNftAbi,
-    functionName: "requestNft",
-    account: address,
-    value: mintFee,
-});
+  const requestNftData = await publicClient?.simulateContract({
+      address: requestNftAddress,
+      abi: requestNftAbi,
+      functionName: "requestNft",
+      account: address,
+      value: mintFee,
+  });
 
-// 需要调用requestNft检查是否需要授权
-await writeContractAsync(requestNftData?.request!);
-return requestNftData?.result;
+  // 需要调用requestNft检查是否需要授权
+  await writeContractAsync(requestNftData?.request!);
+  return requestNftData?.result;
 }
 ```
 
@@ -130,7 +130,7 @@ if (chainId == 31337) {
 }
 ```
 
-#### 监听 NFTMinted 事件（方便进行后续操作）
+#### 监听 NFTMinted 事件
 
 ```js
 useEffect(() => {
@@ -164,4 +164,116 @@ useEffect(() => {
 
   return () => unwatch!();
 }, [publicClient, setLastMintedTokenId]);
+```
+
+### 自定义生成 NFT
+
+##### 上传元数据到 pinata 返回 tokenURI
+
+```js
+const baseUrl = "https://api.pinata.cloud";
+const apiKey = process.env.NEXT_PUBLIC_PINATA_API_KEY;
+const apiSecret = process.env.NEXT_PUBLIC_PINATA_API_SECRET;
+
+const uploadFile = async (
+  file: File,
+  options?: { name?: string, keyvalues?: Record<string, string> }
+): Promise<PinataResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${baseUrl}/pinning/pinFileToIPFS`, {
+    method: "POST",
+    headers: {
+      pinata_api_key: apiKey,
+      pinata_secret_api_key: apiSecret,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to upload file to Pinata: ${error}`);
+  }
+
+  return response.json();
+};
+
+const uploadJSON = async (
+  metadata: NFTMetadata,
+  options?: { name?: string }
+): Promise<PinataResponse> => {
+  const response = await fetch(`${baseUrl}/pinning/pinJSONToIPFS`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      pinata_api_key: apiKey,
+      pinata_secret_api_key: apiSecret,
+    },
+    body: JSON.stringify({
+      pinataContent: metadata,
+      pinataOptions: { cidVersion: 1 },
+      pinataMetadata: {
+        name: options?.name || `NFT-Metadata-${Date.now()}`,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to upload JSON to Pinata: ${error}`);
+  }
+
+  return response.json();
+};
+
+const uploadImage = async (file: File, name?: string): Promise<string> => {
+  const response = await pinata.uploadFile(file, {
+    name: name || `NFT-Image-${Date.now()}`,
+    keyvalues: {
+      type: "nft-image",
+      uploadedAt: new Date().toISOString(),
+    },
+  });
+  
+  return response.IpfsHash;
+};
+
+const uploadMetadata = async (
+  metadata: NFTMetadata,
+  name?: string
+): Promise<string> => {
+  const response = await pinata.uploadJSON(metadata, {
+    name: name || `NFT-Metadata-${Date.now()}`,
+  });
+
+  return response.IpfsHash;
+};
+
+const uploadNFT = async (
+  imageFile: File,
+  metadata: Omit<NFTMetadata, "image">,
+  name?: string
+): Promise<{
+  imageHash: string,
+  metadataHash: string,
+  tokenURI: string,
+}> => {
+  const imageHash = await uploadImage(imageFile, `${name}-image`);
+  const imageUrl = `ipfs://${imageHash}`;
+
+  const completeMetadata: NFTMetadata = {
+    ...metadata,
+    image: imageUrl,
+  };
+
+  const metadataHash = await uploadMetadata(completeMetadata, `${name}`);
+  const tokenURI = `ipfs://${metadataHash}`;
+
+  return {
+    imageHash,
+    metadataHash,
+    tokenURI,
+  };
+};
 ```
