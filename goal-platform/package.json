@@ -1,0 +1,21 @@
+{
+  "name": "goal-platform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+
+  "scripts": {
+    "hardhat:dev": "pnpm --filter @goal/hardhat dev",
+    "compile": "--filter @goal/hardhat hardhat compile",
+    "test": "--filter @goal/hardhat hardhat test",
+    "frontend:dev": "pnpm --filter @goal/nextjs dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "workspaces": [
+    "packages/*"
+  ]
+}
